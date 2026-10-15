@@ -14,6 +14,7 @@ DerivedData/
 build/
 dist/
 Resources/AppIcon.iconset/
+Resources/seeds.sqlite
 
 # IDE
 .vscode/

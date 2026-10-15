@@ -2,18 +2,97 @@ import SwiftUI
 
 @MainActor
 final class SearchViewModel: ObservableObject {
+    enum HomeTab: String, CaseIterable {
+        case recent = "Son Arananlar"
+        case favorites = "Favoriler"
+    }
+
     @Published var searchText = ""
     @Published var results: [WordResult] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var recentSearches: [HistoryItem] = []
+    @Published var favoriteWords: [HistoryItem] = []
+    @Published var suggestions: [String] = []
+    @Published var isCurrentWordFavorite = false
+    @Published var selectedHomeTab: HomeTab = .recent
     
     private let locale = Locale(identifier: "tr_TR")
+    private var currentSearchTask: Task<Void, Never>?
+    private var currentSuggestTask: Task<Void, Never>?
+    
+    init() {
+        loadRecentSearches()
+        loadFavorites()
+    }
+    
+    func loadRecentSearches() {
+        Task {
+            let items = await DictionaryStore.shared.recentSearches()
+            self.recentSearches = items
+        }
+    }
+
+    func loadFavorites() {
+        Task {
+            let items = await DictionaryStore.shared.favoriteWords()
+            self.favoriteWords = items
+        }
+    }
+    
+    func deleteRecentItem(_ word: String) {
+        Task {
+            await DictionaryStore.shared.deleteFromHistory(word: word)
+            self.loadRecentSearches()
+            self.loadFavorites()
+        }
+    }
+    
+    func clearAllRecent() {
+        Task {
+            await DictionaryStore.shared.clearAllHistory()
+            self.recentSearches = []
+            self.favoriteWords = []
+        }
+    }
+
+    func toggleFavorite(word: String) {
+        Task {
+            let isFav = await DictionaryStore.shared.toggleFavorite(word: word)
+            self.isCurrentWordFavorite = isFav
+            self.loadFavorites()
+            self.loadRecentSearches()
+        }
+    }
+
+    func updateSuggestions(for text: String) {
+        currentSuggestTask?.cancel()
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(with: locale)
+        guard !trimmed.isEmpty else {
+            self.suggestions = []
+            return
+        }
+
+        currentSuggestTask = Task {
+            let matches = await DictionaryStore.shared.autocomplete(prefix: trimmed)
+            guard !Task.isCancelled else { return }
+            self.suggestions = matches
+        }
+    }
     
     func clearSearch() {
+        currentSearchTask?.cancel()
+        currentSearchTask = nil
+        currentSuggestTask?.cancel()
+        currentSuggestTask = nil
         searchText = ""
         results = []
+        suggestions = []
         errorMessage = nil
         isLoading = false
+        isCurrentWordFavorite = false
+        loadRecentSearches()
+        loadFavorites()
     }
     
     func setQueryAndSearch(_ query: String) {
@@ -26,8 +105,7 @@ final class SearchViewModel: ObservableObject {
     func performSearch() {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else {
-            results = []
-            errorMessage = nil
+            clearSearch()
             return
         }
 
@@ -38,35 +116,51 @@ final class SearchViewModel: ObservableObject {
         
         isLoading = true
         errorMessage = nil
+        suggestions = []
         
-        Task {
+        currentSearchTask?.cancel()
+        currentSearchTask = Task {
             // Kayıtlı kelimeyi anında veritabanından göster (çevrimdışı da çalışır).
             var servedFromCache = false
             if let cached = await DictionaryStore.shared.cachedResponse(for: normalized),
                let decoded = try? JSONDecoder().decode([WordResult].self, from: cached),
                !decoded.isEmpty {
-                guard self.searchText == normalized else { return }
+                guard !Task.isCancelled, self.searchText == normalized else { return }
                 self.results = decoded
                 self.isLoading = false
                 servedFromCache = true
+                self.isCurrentWordFavorite = await DictionaryStore.shared.isFavorite(word: normalized)
             }
 
             do {
                 let response = try await TDKAPIClient.searchWord(normalized)
                 // Bu yanıt gelene kadar yeni bir arama başladıysa sonucu ezme.
-                guard self.searchText == normalized else { return }
+                guard !Task.isCancelled, self.searchText == normalized else { return }
                 self.results = response.results
                 self.isLoading = false
+                self.isCurrentWordFavorite = await DictionaryStore.shared.isFavorite(word: normalized)
                 if !response.results.isEmpty {
                     await DictionaryStore.shared.save(word: normalized, responseJSON: response.raw)
+                    self.loadRecentSearches()
                 }
+            } catch is CancellationError {
+                // Arama iptal edildi (yeni bir arama başladı veya arama temizlendi).
+                return
             } catch {
-                guard self.searchText == normalized else { return }
+                guard !Task.isCancelled, self.searchText == normalized else { return }
+                if (error as? URLError)?.code == .cancelled {
+                    return
+                }
                 if servedFromCache {
                     // Çevrimdışı ama önbellekte var: sonuçlar ekranda kalsın, hata gösterme.
                     await DictionaryStore.shared.touch(word: normalized)
+                    self.loadRecentSearches()
                 } else {
-                    self.errorMessage = "Hata: \(error.localizedDescription)"
+                    if let urlError = error as? URLError, urlError.code == .timedOut {
+                        self.errorMessage = "TDK sunucusu yanıt vermedi (zaman aşımı). Lütfen tekrar deneyin."
+                    } else {
+                        self.errorMessage = "Hata: \(error.localizedDescription)"
+                    }
                     self.isLoading = false
                 }
             }
@@ -95,6 +189,18 @@ struct SearchView: View {
                         .focused($isSearchFocused)
                         .onSubmit {
                             viewModel.performSearch()
+                        }
+                        .onChange(of: viewModel.searchText) { newValue in
+                            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                            if trimmed.isEmpty {
+                                viewModel.results = []
+                                viewModel.errorMessage = nil
+                                viewModel.suggestions = []
+                                viewModel.loadRecentSearches()
+                                viewModel.loadFavorites()
+                            } else if viewModel.results.isEmpty {
+                                viewModel.updateSuggestions(for: newValue)
+                            }
                         }
 
                     if !viewModel.searchText.isEmpty {
@@ -125,7 +231,7 @@ struct SearchView: View {
                 
                 Divider()
                 
-                HStack {
+                HStack(spacing: 10) {
                     Text("\(shortcutDisplay) - Aç/Kapat")
                         .font(.caption2)
                         .foregroundColor(.secondary)
@@ -137,19 +243,30 @@ struct SearchView: View {
                     .buttonStyle(.plain)
                     .foregroundColor(.secondary)
                     .help("Ayarlar")
+
                     Button(action: { popover?.performClose(nil) }) {
                         Image(systemName: "xmark")
                             .font(.caption)
                     }
                     .buttonStyle(.plain)
                     .foregroundColor(.secondary)
-                    .help("Kapat")
+                    .help("Pencereyi Gizle")
+
+                    Button(action: { NSApp.terminate(nil) }) {
+                        Image(systemName: "power")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.secondary)
+                    .help("Kâmus'tan Çık")
                 }
                 .padding(.horizontal, 12)
                 .padding(.bottom, 8)
             }
             .frame(width: 400, height: 500)
             .onAppear {
+                viewModel.loadRecentSearches()
+                viewModel.loadFavorites()
                 DispatchQueue.main.async {
                     isSearchFocused = true
                 }
@@ -220,40 +337,189 @@ struct SearchView: View {
                     .multilineTextAlignment(.center)
             }
             .padding()
-        } else if viewModel.results.isEmpty && !viewModel.searchText.isEmpty {
-            VStack(spacing: 8) {
-                Image(systemName: "book.circle")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                Text("Kelime bulunamadı")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .padding()
         } else if !viewModel.results.isEmpty {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(viewModel.results, id: \.madde_id) { result in
-                        WordDetailView(result: result)
+                        WordDetailView(
+                            result: result,
+                            isFavorite: viewModel.isCurrentWordFavorite,
+                            onToggleFavorite: {
+                                viewModel.toggleFavorite(word: result.madde)
+                            }
+                        )
                     }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
             }
-        } else {
-            VStack(spacing: 8) {
-                Image(systemName: "book.fill")
-                    .font(.title2)
-                    .foregroundColor(.blue)
-                Text("Kâmus")
-                    .font(.headline)
-                Text("Bir kelime yazarak başlayın")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+        } else if !viewModel.searchText.isEmpty {
+            if !viewModel.suggestions.isEmpty {
+                suggestionsView
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: "book.circle")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                    Text("Kelime bulunamadı")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text("TDK'de aramak için Enter'a basın")
+                        .font(.caption2)
+                        .foregroundColor(.secondary.opacity(0.8))
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .padding()
-            .frame(height: 120)
+        } else {
+            homeTabView
         }
+    }
+
+    @ViewBuilder
+    private var homeTabView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Button(action: { viewModel.selectedHomeTab = .recent }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                        Text("Son Arananlar")
+                    }
+                    .font(.system(size: 11, weight: viewModel.selectedHomeTab == .recent ? .semibold : .regular))
+                    .foregroundColor(viewModel.selectedHomeTab == .recent ? .primary : .secondary)
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(viewModel.selectedHomeTab == .recent ? Color.primary.opacity(0.08) : Color.clear)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                Button(action: { viewModel.selectedHomeTab = .favorites }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "star.fill")
+                            .foregroundColor(viewModel.selectedHomeTab == .favorites ? .yellow : .secondary)
+                        Text("Favoriler (\(viewModel.favoriteWords.count))")
+                    }
+                    .font(.system(size: 11, weight: viewModel.selectedHomeTab == .favorites ? .semibold : .regular))
+                    .foregroundColor(viewModel.selectedHomeTab == .favorites ? .primary : .secondary)
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(viewModel.selectedHomeTab == .favorites ? Color.primary.opacity(0.08) : Color.clear)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                if viewModel.selectedHomeTab == .recent && !viewModel.recentSearches.isEmpty {
+                    Button("Tümünü Temizle") {
+                        viewModel.clearAllRecent()
+                    }
+                    .buttonStyle(.plain)
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 4)
+
+            if viewModel.selectedHomeTab == .recent {
+                if !viewModel.recentSearches.isEmpty {
+                    ScrollView {
+                        LazyVStack(spacing: 2) {
+                            ForEach(viewModel.recentSearches) { item in
+                                RecentSearchRow(
+                                    item: item,
+                                    onSelect: {
+                                        viewModel.setQueryAndSearch(item.word)
+                                    },
+                                    onDelete: {
+                                        viewModel.deleteRecentItem(item.word)
+                                    }
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                    }
+                } else {
+                    emptyHomePlaceholder(
+                        icon: "clock",
+                        title: "Henüz arama yapılmadı",
+                        subtitle: "Arama kutusuna bir kelime yazıp Enter'a basarak başlayın"
+                    )
+                }
+            } else {
+                if !viewModel.favoriteWords.isEmpty {
+                    ScrollView {
+                        LazyVStack(spacing: 2) {
+                            ForEach(viewModel.favoriteWords) { item in
+                                RecentSearchRow(
+                                    item: item,
+                                    onSelect: {
+                                        viewModel.setQueryAndSearch(item.word)
+                                    },
+                                    onDelete: {
+                                        viewModel.deleteRecentItem(item.word)
+                                    }
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                    }
+                } else {
+                    emptyHomePlaceholder(
+                        icon: "star",
+                        title: "Favori kelime yok",
+                        subtitle: "Kelime kartlarındaki yıldız simgesine tıklayarak favorilerinize ekleyebilirsiniz"
+                    )
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    private func emptyHomePlaceholder(icon: String, title: String, subtitle: String) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(.secondary)
+            Text(title)
+                .font(.headline)
+            Text(subtitle)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private var suggestionsView: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("ÖNERİLER (ENTER'A BASARAK ARAYABİLİRSİNİZ)")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.secondary)
+                .tracking(0.5)
+                .padding(.horizontal, 14)
+                .padding(.top, 4)
+
+            ScrollView {
+                LazyVStack(spacing: 2) {
+                    ForEach(viewModel.suggestions, id: \.self) { suggestion in
+                        SuggestionRow(word: suggestion, query: viewModel.searchText) {
+                            viewModel.setQueryAndSearch(suggestion)
+                        }
+                    }
+                }
+                .padding(.horizontal, 8)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
     
     private var shortcutDisplay: String {
@@ -270,6 +536,8 @@ struct SearchView: View {
 
 struct WordDetailView: View {
     let result: WordResult
+    var isFavorite: Bool = false
+    var onToggleFavorite: (() -> Void)? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -287,6 +555,15 @@ struct WordDetailView: View {
                     }
                 }
                 Spacer()
+                if let onToggleFavorite {
+                    Button(action: onToggleFavorite) {
+                        Image(systemName: isFavorite ? "star.fill" : "star")
+                            .font(.system(size: 15))
+                            .foregroundColor(isFavorite ? .yellow : .secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help(isFavorite ? "Favorilerden Çıkar" : "Favorilere Ekle")
+                }
             }
             
             // Meanings
@@ -365,3 +642,104 @@ struct WordDetailView: View {
         .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
     }
 }
+
+struct RecentSearchRow: View {
+    let item: HistoryItem
+    let onSelect: () -> Void
+    let onDelete: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: item.isFavorite ? "star.fill" : "clock")
+                .font(.system(size: 11))
+                .foregroundColor(item.isFavorite ? .yellow : .secondary)
+
+            Text(item.word)
+                .font(.system(size: 13, weight: .regular))
+                .foregroundColor(.primary)
+
+            Spacer()
+
+            if item.searchCount > 1 {
+                Text("\(item.searchCount)×")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(Capsule().fill(Color.primary.opacity(0.08)))
+            }
+
+            if isHovering {
+                Button(action: onDelete) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .padding(4)
+                }
+                .buttonStyle(.plain)
+                .help("Geçmişten sil")
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isHovering ? Color.primary.opacity(0.06) : Color.clear)
+        )
+        .contentShape(Rectangle())
+        .onHover { isHovering = $0 }
+        .onTapGesture {
+            onSelect()
+        }
+    }
+}
+
+struct SuggestionRow: View {
+    let word: String
+    let query: String
+    let onSelect: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+
+            highlightedText(word: word, query: query)
+                .font(.system(size: 13))
+
+            Spacer()
+
+            Image(systemName: "arrow.up.left")
+                .font(.system(size: 10))
+                .foregroundColor(.secondary)
+                .opacity(isHovering ? 1 : 0)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isHovering ? Color.primary.opacity(0.06) : Color.clear)
+        )
+        .contentShape(Rectangle())
+        .onHover { isHovering = $0 }
+        .onTapGesture {
+            onSelect()
+        }
+    }
+
+    private func highlightedText(word: String, query: String) -> Text {
+        let lowerWord = word.lowercased()
+        let lowerQuery = query.lowercased()
+        if lowerWord.hasPrefix(lowerQuery) {
+            let matchLength = query.count
+            let prefix = String(word.prefix(matchLength))
+            let suffix = String(word.dropFirst(matchLength))
+            return Text(prefix).bold() + Text(suffix).foregroundColor(.secondary)
+        }
+        return Text(word)
+    }
+}
+

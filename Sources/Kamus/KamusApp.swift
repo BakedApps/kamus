@@ -296,7 +296,9 @@ struct SettingsView: View {
     @AppStorage("shortcutModifiers") private var shortcutModifiers: Int = ShortcutDefaults.modifiersInt
     @State private var isRecording = false
     @State private var isPermissionGranted = InputMonitoringPermission.isTrusted()
+    @State private var isAccessibilityGranted = AccessibilityPermission.isTrusted(promptIfNeeded: false)
     @State private var showsStaleGrantHint = false
+    @State private var dbStats = DatabaseStats(wordCount: 0, favoriteCount: 0, databaseSizeBytes: 0, databasePath: "")
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -320,33 +322,28 @@ struct SettingsView: View {
                 }
             }
 
-            section("Global Kısayol İzni") {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(isPermissionGranted ? Color.green : Color.orange)
-                            .frame(width: 7, height: 7)
-                        Text(isPermissionGranted ? "Input Monitoring izni verildi"
-                                                 : "Input Monitoring izni gerekli")
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
-                    }
+            section("İzinler") {
+                VStack(alignment: .leading, spacing: 12) {
+                    permissionRow(
+                        granted: isAccessibilityGranted,
+                        title: "Erişilebilirlik",
+                        detail: "Başka uygulamalardaki seçili kelimeyi okumak için",
+                        openSettings: AccessibilityPermission.openSystemSettings
+                    )
 
-                    HStack(spacing: 8) {
-                        if !isPermissionGranted {
-                            Button("İzin İste") {
-                                _ = InputMonitoringPermission.request()
-                                refreshPermission()
-                                showsStaleGrantHint = !isPermissionGranted
-                            }
-                            .buttonStyle(SoftButtonStyle(prominent: true))
-                        }
+                    Divider()
 
-                        Button("Ayarları Aç") {
-                            InputMonitoringPermission.openSystemSettings()
-                        }
-                        .buttonStyle(SoftButtonStyle())
-                    }
+                    permissionRow(
+                        granted: isPermissionGranted,
+                        title: "Input Monitoring",
+                        detail: "Kısayolun her uygulamada çalışması için",
+                        request: {
+                            _ = InputMonitoringPermission.request()
+                            refreshPermission()
+                            showsStaleGrantHint = !isPermissionGranted
+                        },
+                        openSettings: InputMonitoringPermission.openSystemSettings
+                    )
 
                     if showsStaleGrantHint && !isPermissionGranted {
                         Text("Sistem Ayarları'nda anahtar zaten açıksa izin kaydı eskimiş demektir: "
@@ -357,13 +354,87 @@ struct SettingsView: View {
                     }
                 }
             }
+
+            section("Sözlük Veritabanı") {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 24) {
+                        statLabel(title: "Kayıtlı Kelime", value: "\(dbStats.wordCount)")
+                        statLabel(title: "Favoriler", value: "\(dbStats.favoriteCount)")
+                        statLabel(title: "Boyut", value: ByteCountFormatter.string(fromByteCount: dbStats.databaseSizeBytes, countStyle: .file))
+                    }
+
+                    Divider()
+
+                    HStack(spacing: 8) {
+                        Button("JSON Olarak Dışa Aktar") {
+                            exportJSON()
+                        }
+                        .buttonStyle(SoftButtonStyle())
+
+                        if !dbStats.databasePath.isEmpty {
+                            Button("Finder'da Göster") {
+                                NSWorkspace.shared.selectFile(dbStats.databasePath, inFileViewerRootedAtPath: "")
+                            }
+                            .buttonStyle(SoftButtonStyle())
+                        }
+                    }
+                }
+            }
+
+            Divider()
+
+            HStack {
+                Spacer()
+                Button(action: { NSApp.terminate(nil) }) {
+                    Label("Kâmus'tan Çık", systemImage: "power")
+                }
+                .buttonStyle(SoftButtonStyle())
+            }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .onAppear(perform: refreshPermission)
+        .onAppear {
+            refreshPermission()
+            refreshStats()
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             // Kullanıcı System Settings'ten dönünce durum kendiliğinden tazelensin.
             refreshPermission()
+            refreshStats()
+        }
+    }
+
+    private func statLabel(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.system(size: 10))
+                .foregroundColor(.secondary)
+            Text(value)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.primary)
+        }
+    }
+
+    private func refreshStats() {
+        Task {
+            dbStats = await DictionaryStore.shared.databaseStats()
+        }
+    }
+
+    private func exportJSON() {
+        Task {
+            guard let data = await DictionaryStore.shared.exportAllWordsJSON() else { return }
+            let panel = NSSavePanel()
+            panel.title = "Kâmus Sözlük Yedekle"
+            panel.nameFieldStringValue = "kamus-sozluk-yedek.json"
+            if #available(macOS 12.0, *) {
+                panel.allowedContentTypes = [.json]
+            }
+            panel.begin { response in
+                if response == .OK, let url = panel.url {
+                    try? data.write(to: url)
+                }
+            }
         }
     }
 
@@ -423,6 +494,42 @@ struct SettingsView: View {
 
     private func refreshPermission() {
         isPermissionGranted = InputMonitoringPermission.isTrusted()
+        isAccessibilityGranted = AccessibilityPermission.isTrusted(promptIfNeeded: false)
+    }
+
+    /// Tek bir izin satırı: durum noktası, başlık, açıklama ve eylem düğmeleri.
+    @ViewBuilder
+    private func permissionRow(granted: Bool,
+                               title: String,
+                               detail: String,
+                               request: (() -> Void)? = nil,
+                               openSettings: @escaping () -> Void) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Circle()
+                .fill(granted ? Color.green : Color.orange)
+                .frame(width: 7, height: 7)
+                .padding(.top, 4)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 12, weight: .medium))
+                Text(granted ? "İzin verildi" : detail)
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 8)
+
+            if !granted {
+                if let request = request {
+                    Button("İzin İste", action: request)
+                        .buttonStyle(SoftButtonStyle(prominent: true))
+                }
+                Button("Aç", action: openSettings)
+                    .buttonStyle(SoftButtonStyle())
+            }
+        }
     }
 
     private var shortcutDisplay: String {
@@ -481,7 +588,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "book.fill", accessibilityDescription: "Kâmus")
-            button.action = #selector(togglePopover(_:))
+            button.action = #selector(statusBarButtonClicked(_:))
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.target = self
         }
         
@@ -528,6 +636,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSEvent.removeMonitor(localKeyMonitor)
             self.localKeyMonitor = nil
         }
+    }
+    
+    @objc func statusBarButtonClicked(_ sender: NSStatusBarButton) {
+        guard let event = NSApp.currentEvent else {
+            togglePopover(sender)
+            return
+        }
+        
+        if event.type == .rightMouseUp {
+            let menu = NSMenu()
+            let settingsItem = NSMenuItem(title: "Ayarlar…", action: #selector(openSettingsWindow), keyEquivalent: ",")
+            settingsItem.target = self
+            menu.addItem(settingsItem)
+            
+            menu.addItem(NSMenuItem.separator())
+            
+            let quitItem = NSMenuItem(title: "Kâmus'tan Çık", action: #selector(quitApp), keyEquivalent: "q")
+            quitItem.target = self
+            menu.addItem(quitItem)
+            
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height), in: sender)
+        } else {
+            togglePopover(sender)
+        }
+    }
+
+    @objc func openSettingsWindow() {
+        _ = NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) ||
+            NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc func quitApp() {
+        NSApp.terminate(nil)
     }
     
     @objc func togglePopover(_ sender: Any?) {
@@ -833,6 +975,12 @@ enum SelectedTextReader {
 }
 
 enum AccessibilityPermission {
+    static func openSystemSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
     static func isTrusted(promptIfNeeded: Bool) -> Bool {
         if !promptIfNeeded {
             return AXIsProcessTrusted()

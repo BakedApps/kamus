@@ -44,6 +44,15 @@ else
     echo "⚠️  Resources/AppIcon.icns yok; uygulama genel ikonla görünecek."
 fi
 
+# Copy or decompress the offline dictionary seed if present
+if [ -f "Resources/seeds.sqlite" ]; then
+    echo "📚 Çevrimdışı sözlük kopyalanıyor..."
+    cp "Resources/seeds.sqlite" "${RESOURCES_DIR}/"
+elif [ -f "Resources/seeds.sqlite.gz" ]; then
+    echo "📚 Çevrimdışı sözlük tohumu açılıyor..."
+    gzip -dc "Resources/seeds.sqlite.gz" > "${RESOURCES_DIR}/seeds.sqlite"
+fi
+
 # Make executable
 chmod +x "${MACOS_DIR}/${APP_NAME}"
 

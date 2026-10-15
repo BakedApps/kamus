@@ -8,26 +8,34 @@ struct SearchResponse {
 struct TDKAPIClient {
     private static let baseURL = "https://sozluk.gov.tr"
 
-    static func searchWord(_ word: String) async throws -> SearchResponse {
-        // URL encode the word properly
-        let encodedWord: String
-        if let encoded = word.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
-            encodedWord = encoded
-        } else {
-            throw APIError.invalidWord
+    private static let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 8
+        config.timeoutIntervalForResource = 20
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        return URLSession(configuration: config)
+    }()
+
+    private static func makeRequest(for word: String, timeout: TimeInterval) throws -> URLRequest {
+        guard var components = URLComponents(string: "\(baseURL)/gts") else {
+            throw APIError.invalidURL
         }
-        
-        let urlString = "\(baseURL)/gts?ara=\(encodedWord)"
-        guard let url = URL(string: urlString) else {
+        components.queryItems = [URLQueryItem(name: "ara", value: word)]
+        guard let url = components.url else {
             throw APIError.invalidURL
         }
         
         var request = URLRequest(url: url)
-        request.timeoutInterval = 15
+        request.timeoutInterval = timeout
         request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36", forHTTPHeaderField: "User-Agent")
+        request.setValue("https://sozluk.gov.tr/", forHTTPHeaderField: "Referer")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
+        return request
+    }
+
+    private static func executeFetch(word: String, timeout: TimeInterval) async throws -> SearchResponse {
+        let request = try makeRequest(for: word, timeout: timeout)
+        let (data, response) = try await session.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
@@ -37,14 +45,12 @@ struct TDKAPIClient {
             throw APIError.serverError(httpResponse.statusCode)
         }
         
-        // Check if data is empty
         guard !data.isEmpty else {
             throw APIError.emptyResponse
         }
         
-        // Try to decode the response
+        let decoder = JSONDecoder()
         do {
-            let decoder = JSONDecoder()
             let results = try decoder.decode([WordResult].self, from: data)
             return SearchResponse(results: results, raw: data)
         } catch let decodingError as DecodingError {
@@ -58,6 +64,77 @@ struct TDKAPIClient {
                 }
             }
             throw APIError.decodingError(decodingError)
+        }
+    }
+
+    private static func isFatalError(_ error: Error) -> Bool {
+        if let apiError = error as? APIError {
+            switch apiError {
+            case .invalidWord, .invalidURL:
+                return true
+            default:
+                break
+            }
+        }
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet, .cannotFindHost, .dnsLookupFailed, .internationalRoamingOff, .callIsActive, .dataNotAllowed:
+                return true
+            default:
+                break
+            }
+        }
+        return false
+    }
+
+    /// Kelimeyi TDK API üzerinden arar. TDK sunucularındaki ani gecikme ve takılmalara (tail latency)
+    /// karşı "hedged request" yaklaşımı kullanır: 2.5 saniye içinde yanıt gelmezse ikinci bir eşzamanlı
+    /// istek başlatılır ve ilk dönen geçerli yanıt kabul edilir.
+    static func searchWord(_ word: String) async throws -> SearchResponse {
+        let trimmed = word.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw APIError.invalidWord
+        }
+
+        let attemptTimeout: TimeInterval = 8.0
+        let hedgeDelays: [UInt64] = [
+            0,
+            2_500_000_000, // 2.5 saniye
+            5_000_000_000  // 5.0 saniye
+        ]
+
+        return try await withThrowingTaskGroup(of: SearchResponse.self) { group in
+            for delay in hedgeDelays {
+                group.addTask {
+                    if delay > 0 {
+                        try await Task.sleep(nanoseconds: delay)
+                    }
+                    try Task.checkCancellation()
+                    return try await executeFetch(word: trimmed, timeout: attemptTimeout)
+                }
+            }
+
+            var lastError: Error?
+            while let result = await group.nextResult() {
+                switch result {
+                case .success(let response):
+                    // İlk başarılı yanıt geldiğinde diğer tüm istekleri iptal et
+                    group.cancelAll()
+                    return response
+                case .failure(let error):
+                    if error is CancellationError {
+                        continue
+                    }
+                    lastError = error
+                    // Çevrimdışı olma veya geçersiz URL gibi telafisi olmayan hatalarda diğer denemeleri bekleme
+                    if isFatalError(error) {
+                        group.cancelAll()
+                        throw error
+                    }
+                }
+            }
+
+            throw lastError ?? APIError.unexpectedResponse
         }
     }
 }

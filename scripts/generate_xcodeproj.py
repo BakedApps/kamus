@@ -43,6 +43,10 @@ def main():
     action_files = [
         ("iOS/KamusActionExtension/ActionViewController.swift", "ActionViewController.swift", "sourcecode.swift"),
         ("iOS/KamusActionExtension/ActionLookupView.swift", "ActionLookupView.swift", "sourcecode.swift"),
+        ("iOS/KamusActionExtension/Assets.xcassets", "Assets.xcassets", "folder.assetcatalog"),
+        ("iOS/KamusActionExtension/ActionIcon.png", "ActionIcon.png", "image.png"),
+        ("iOS/KamusActionExtension/ActionIcon@2x.png", "ActionIcon@2x.png", "image.png"),
+        ("iOS/KamusActionExtension/ActionIcon@3x.png", "ActionIcon@3x.png", "image.png"),
         ("iOS/KamusActionExtension/Info.plist", "Info.plist", "text.plist.xml"),
         ("iOS/KamusActionExtension/KamusActionExtension.entitlements", "KamusActionExtension.entitlements", "text.plist.entitlements"),
     ]
@@ -179,6 +183,13 @@ def main():
         add_build_file(shared_fids["Sources/Kamus/TurkishSpeechSpeaker.swift"], "TurkishSpeechSpeaker.swift"),
         add_build_file(action_fids["iOS/KamusActionExtension/ActionViewController.swift"], "ActionViewController.swift"),
         add_build_file(action_fids["iOS/KamusActionExtension/ActionLookupView.swift"], "ActionLookupView.swift"),
+    ]
+
+    action_bf_resources = [
+        add_res_file(action_fids["iOS/KamusActionExtension/Assets.xcassets"], "Assets.xcassets"),
+        add_res_file(action_fids["iOS/KamusActionExtension/ActionIcon.png"], "ActionIcon.png"),
+        add_res_file(action_fids["iOS/KamusActionExtension/ActionIcon@2x.png"], "ActionIcon@2x.png"),
+        add_res_file(action_fids["iOS/KamusActionExtension/ActionIcon@3x.png"], "ActionIcon@3x.png"),
     ]
 
     # Build files for Widget
@@ -453,6 +464,7 @@ def main():
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+{chr(10).join([f"{chr(9)}{chr(9)}{chr(9)}{fid}," for fid in action_bf_resources])}
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		}};
@@ -611,6 +623,7 @@ def main():
 		{action_dbg_cfg} /* Debug */ = {{
 			isa = XCBuildConfiguration;
 			buildSettings = {{
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CURRENT_PROJECT_VERSION = 1;
@@ -635,6 +648,7 @@ def main():
 		{action_rel_cfg} /* Release */ = {{
 			isa = XCBuildConfiguration;
 			buildSettings = {{
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CURRENT_PROJECT_VERSION = 1;

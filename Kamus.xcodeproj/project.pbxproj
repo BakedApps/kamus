@@ -23,6 +23,10 @@
 		5E095A697BA8E54E92814D79 /* TurkishSpeechSpeaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 978CEB3FF9559F2F9B687E4B /* TurkishSpeechSpeaker.swift */; };
 		2C4C16553C4F53D295CD9F17 /* ActionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6E8387A8665DAD32BB6214 /* ActionViewController.swift */; };
 		BF41F5091EBC45263B45877C /* ActionLookupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBCE0ADE07C6D127BE7498A /* ActionLookupView.swift */; };
+		F622A92B1442C1D00F4F5244 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8CCC864CB34AB26158A1C5D8 /* Assets.xcassets */; };
+		B09FF1C8DB9518AAB761208E /* ActionIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = CB93AECCC9C6CA0065B41F9C /* ActionIcon.png */; };
+		9945EF568C2853B4AFDD7655 /* ActionIcon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5E4FA1664ACD10E9FA64EEF0 /* ActionIcon@2x.png */; };
+		AE1A8A8DD78A76A4C6204DBD /* ActionIcon@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 581067929EBEAD218A3E2AD6 /* ActionIcon@3x.png */; };
 		E1AE58EC0DC00F6E1A50FA49 /* TDKAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D867D1449A2DD3E74B107C67 /* TDKAPIClient.swift */; };
 		8F87131741C13F545B698480 /* DictionaryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D83768C5EFABC011664FC14 /* DictionaryStore.swift */; };
 		7B33F3B7D13C15604AC23FA6 /* KamusWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574369D94F00E00C548557F1 /* KamusWidgets.swift */; };
@@ -80,6 +84,10 @@
 		2D81BF348DA85F545AFA82EA /* Kamus.entitlements */ = {isa = PBXFileReference; explicitFileType = "text.plist.entitlements"; path = "iOS/Kamus/Kamus.entitlements"; sourceTree = "<group>"; };
 		FF6E8387A8665DAD32BB6214 /* ActionViewController.swift */ = {isa = PBXFileReference; explicitFileType = "sourcecode.swift"; path = "iOS/KamusActionExtension/ActionViewController.swift"; sourceTree = "<group>"; };
 		3DBCE0ADE07C6D127BE7498A /* ActionLookupView.swift */ = {isa = PBXFileReference; explicitFileType = "sourcecode.swift"; path = "iOS/KamusActionExtension/ActionLookupView.swift"; sourceTree = "<group>"; };
+		8CCC864CB34AB26158A1C5D8 /* Assets.xcassets */ = {isa = PBXFileReference; explicitFileType = "folder.assetcatalog"; path = "iOS/KamusActionExtension/Assets.xcassets"; sourceTree = "<group>"; };
+		CB93AECCC9C6CA0065B41F9C /* ActionIcon.png */ = {isa = PBXFileReference; explicitFileType = "image.png"; path = "iOS/KamusActionExtension/ActionIcon.png"; sourceTree = "<group>"; };
+		5E4FA1664ACD10E9FA64EEF0 /* ActionIcon@2x.png */ = {isa = PBXFileReference; explicitFileType = "image.png"; path = "iOS/KamusActionExtension/ActionIcon@2x.png"; sourceTree = "<group>"; };
+		581067929EBEAD218A3E2AD6 /* ActionIcon@3x.png */ = {isa = PBXFileReference; explicitFileType = "image.png"; path = "iOS/KamusActionExtension/ActionIcon@3x.png"; sourceTree = "<group>"; };
 		E2E70A8E87E676E7B26D02AD /* Info.plist */ = {isa = PBXFileReference; explicitFileType = "text.plist.xml"; path = "iOS/KamusActionExtension/Info.plist"; sourceTree = "<group>"; };
 		B26C2B8A1DCCA9E52DD7A243 /* KamusActionExtension.entitlements */ = {isa = PBXFileReference; explicitFileType = "text.plist.entitlements"; path = "iOS/KamusActionExtension/KamusActionExtension.entitlements"; sourceTree = "<group>"; };
 		574369D94F00E00C548557F1 /* KamusWidgets.swift */ = {isa = PBXFileReference; explicitFileType = "sourcecode.swift"; path = "iOS/KamusWidgets/KamusWidgets.swift"; sourceTree = "<group>"; };
@@ -299,6 +307,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			F622A92B1442C1D00F4F5244,
+			B09FF1C8DB9518AAB761208E,
+			9945EF568C2853B4AFDD7655,
+			AE1A8A8DD78A76A4C6204DBD,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -473,6 +485,7 @@
 		0DC39CA85A3DE1677201555E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CURRENT_PROJECT_VERSION = 1;
@@ -497,6 +510,7 @@
 		2934F0CDE5952931D28F6426 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CURRENT_PROJECT_VERSION = 1;

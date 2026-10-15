@@ -70,13 +70,29 @@ sqlite3 ~/Library/Application\ Support/Kamus/dictionary.sqlite \
 
 ## Geliştirme
 
+### macOS
 ```bash
-swift build          # hızlı derleme kontrolü
-./build.sh           # .app paketi üretir ve imzalar
+swift build                    # hızlı derleme kontrolü
+./build.sh                     # .app paketi üretir ve imzalar
 python3 scripts/make_icon.py   # uygulama ikonunu yeniden üretir (Pillow gerekir)
 ```
 
-Kaynaklar `Sources/Kamus/` altında: `KamusApp.swift` (uygulama yaşam döngüsü, global kısayol, seçili metin okuma, ayarlar), `SearchView.swift` (arayüz ve arama modeli), `TDKAPIClient.swift` (API istemcisi ve veri modelleri), `DictionaryStore.swift` (SQLite katmanı).
+### iOS & iPadOS
+```bash
+./scripts/build_ios.sh         # Xcode projesini üretir ve simülatör için derler
+open Kamus.xcodeproj           # Xcode ile açar
+```
+
+iOS projesinde:
+- **Kamus (iOS App):** Canlı arama, otomatik tamamlama, panodaki kelimeyi akıllı algılama, sesli telaffuz (TTS), Günün Kelimesi, favoriler ve arama geçmişi.
+- **KamusActionExtension:** Herhangi bir uygulamada (Safari, Kitaplar, Notlar, WhatsApp) seçilen kelimeye basılı tutup Paylaş -> **"Kâmus'ta Ara"** seçilerek uygulamadan ayrılmadan anlamı getiren eklenti.
+- **KamusWidgets:** WidgetKit ile Kilit Ekranı ve Ana Ekran için **Günün Kelimesi** ve **Hızlı Arama** widget'ları.
+
+Kaynaklar:
+- `Sources/Kamus/`: macOS uygulaması ve ortak çekirdek (`TDKAPIClient.swift`, `DictionaryStore.swift`, `TurkishSpeechSpeaker.swift`).
+- `iOS/Kamus/`: iOS SwiftUI ana uygulaması.
+- `iOS/KamusActionExtension/`: iOS Action Extension.
+- `iOS/KamusWidgets/`: iOS WidgetKit eklentisi.
 
 ## Lisans ve kaynak
 

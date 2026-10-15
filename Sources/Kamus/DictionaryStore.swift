@@ -355,7 +355,7 @@ actor DictionaryStore {
 
     private func databaseDirectory() -> URL {
         #if os(iOS)
-        if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.bakedapps.kamus") {
+        if let groupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.cloud.bakedapps.kamus") {
             let dir = groupURL.appendingPathComponent("Kamus", isDirectory: true)
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             return dir

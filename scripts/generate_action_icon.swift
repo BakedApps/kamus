@@ -14,7 +14,8 @@ func makeBrandIcon(size: CGFloat, filename: String) {
     NSColor.clear.setFill()
     NSRect(x: 0, y: 0, width: size, height: size).fill()
 
-    let font = NSFont(name: "Georgia-Bold", size: size * 0.52) ?? NSFont.boldSystemFont(ofSize: size * 0.52)
+    // Büyütülmüş 'a' harfi (size * 0.65)
+    let font = NSFont(name: "Georgia-Bold", size: size * 0.65) ?? NSFont.boldSystemFont(ofSize: size * 0.65)
     let text = "a" as NSString
     let attrs: [NSAttributedString.Key: Any] = [
         .font: font,
@@ -22,30 +23,32 @@ func makeBrandIcon(size: CGFloat, filename: String) {
     ]
     let strSize = text.size(withAttributes: attrs)
 
-    // Circumflex dimensions
-    let cxWidth = strSize.width * 0.62
-    let cxHeight = strSize.width * 0.24
-    let cxThick = max(size * 0.05, 2.5)
-    let gap = strSize.width * 0.10
+    // Şapka ölçüleri: 'a' harfine çok daha yakın ve orantılı
+    let xHeight = font.xHeight
+    let cxHeight = xHeight * 0.36
+    let cxWidth = strSize.width * 0.66
+    let gap = xHeight * 0.10 // Şapka 'a' harfine yaklaştırıldı
+    let cxThick = max(size * 0.065, 3.0)
 
-    let totalH = cxHeight + gap + strSize.height
-    let topY = (size + totalH) / 2.0
-
-    let aX = (size - strSize.width) / 2.0
-    let aY = topY - cxHeight - gap - strSize.height
-
-    text.draw(at: NSPoint(x: aX, y: aY), withAttributes: attrs)
-
-    // Draw circumflex in bottom-left origin
-    let apexY = topY - cxThick / 2.0
+    let totalVisualH = xHeight + gap + cxHeight
+    let yBottom = (size - totalVisualH) / 2.0 - xHeight * 0.05
     let midX = size / 2.0
+    let aX = (size - strSize.width) / 2.0
+
+    // Harfi çiz
+    text.draw(at: NSPoint(x: aX, y: yBottom), withAttributes: attrs)
+
+    // Şapkayı çiz
+    let apexY = yBottom + xHeight + gap + cxHeight - cxThick / 2.0
+    let baseHatY = yBottom + xHeight + gap + cxThick / 2.0
+
     let path = NSBezierPath()
     path.lineWidth = cxThick
     path.lineCapStyle = .round
     path.lineJoinStyle = .round
-    path.move(to: NSPoint(x: midX - cxWidth / 2.0, y: apexY - cxHeight))
+    path.move(to: NSPoint(x: midX - cxWidth / 2.0, y: baseHatY))
     path.line(to: NSPoint(x: midX, y: apexY))
-    path.line(to: NSPoint(x: midX + cxWidth / 2.0, y: apexY - cxHeight))
+    path.line(to: NSPoint(x: midX + cxWidth / 2.0, y: baseHatY))
     NSColor.black.setStroke()
     path.stroke()
 

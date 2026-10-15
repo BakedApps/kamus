@@ -30,6 +30,10 @@ struct WordOfTheDayView: View {
                                 onToggleFavorite: {
                                     searchVM.toggleFavorite(word: result.madde)
                                     isFavorite.toggle()
+                                },
+                                onSelectWord: { selected in
+                                    searchVM.selectedTab = .search
+                                    searchVM.search(word: selected)
                                 }
                             )
                         }

@@ -1,5 +1,48 @@
 import SwiftUI
 
+// MARK: - Flow Layout for Wrapping Tags
+struct ActionFlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? .infinity
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var lineHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > width && currentX > 0 {
+                currentX = 0
+                currentY += lineHeight + spacing
+                lineHeight = 0
+            }
+            lineHeight = max(lineHeight, size.height)
+            currentX += size.width + spacing
+        }
+        return CGSize(width: width, height: currentY + lineHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var currentX = bounds.minX
+        var currentY = bounds.minY
+        var lineHeight: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > bounds.maxX && currentX > bounds.minX {
+                currentX = bounds.minX
+                currentY += lineHeight + spacing
+                lineHeight = 0
+            }
+            subview.place(at: CGPoint(x: currentX, y: currentY), proposal: .unspecified)
+            lineHeight = max(lineHeight, size.height)
+            currentX += size.width + spacing
+        }
+    }
+}
+
+// MARK: - Action Lookup View
 struct ActionLookupView: View {
     let initialWord: String
     let onClose: () -> Void
@@ -10,6 +53,7 @@ struct ActionLookupView: View {
     @State private var isLoading: Bool = false
     @State private var errorMessage: String? = nil
     @State private var isFavorite: Bool = false
+    @State private var wordHistory: [String] = []
     @StateObject private var speaker = TurkishSpeechSpeaker.shared
 
     var body: some View {
@@ -44,12 +88,14 @@ struct ActionLookupView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(firstResult.madde)
                                         .font(.system(.title2, design: .serif, weight: .bold))
+                                        .textSelection(.enabled)
 
                                     if !firstResult.lisan.isEmpty {
                                         Text(firstResult.lisan)
                                             .font(.footnote)
                                             .italic()
                                             .foregroundColor(.secondary)
+                                            .textSelection(.enabled)
                                     }
                                 }
 
@@ -78,60 +124,53 @@ struct ActionLookupView: View {
                                 }
                             }
 
-                            if !firstResult.birlesikler.isEmpty {
-                                VStack(alignment: .leading, spacing: 4) {
+                            // Birleşik Kelimeler (İnteraktif Çipler)
+                            if !compoundWords(firstResult.birlesikler).isEmpty {
+                                VStack(alignment: .leading, spacing: 6) {
                                     Text("BİRLEŞİK SÖZLER")
                                         .font(.caption2.weight(.bold))
                                         .foregroundColor(.secondary)
-                                    Text(firstResult.birlesikler)
-                                        .font(.footnote)
-                                        .foregroundColor(.primary.opacity(0.85))
+
+                                    ActionFlowLayout(spacing: 6) {
+                                        ForEach(compoundWords(firstResult.birlesikler), id: \.self) { compound in
+                                            Button(action: {
+                                                searchNewWord(compound)
+                                            }) {
+                                                HStack(spacing: 4) {
+                                                    Image(systemName: "magnifyingglass")
+                                                        .font(.system(size: 9))
+                                                    Text(compound)
+                                                        .font(.caption.weight(.medium))
+                                                }
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(Color.accentColor.opacity(0.08))
+                                                .foregroundColor(.accentColor)
+                                                .cornerRadius(6)
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
                                 }
                                 .padding(10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(Color(.secondarySystemBackground))
-                                .cornerRadius(8)
+                                .cornerRadius(10)
                             }
 
                             Divider()
 
                             // Anlamlar
-                            VStack(alignment: .leading, spacing: 14) {
+                            VStack(alignment: .leading, spacing: 16) {
                                 ForEach(firstResult.anlamlarListe.indices, id: \.self) { idx in
                                     let m = firstResult.anlamlarListe[idx]
-                                    HStack(alignment: .top, spacing: 8) {
-                                        Text("\(idx + 1).")
-                                            .font(.subheadline.weight(.semibold))
-                                            .foregroundColor(.accentColor)
-                                            .frame(width: 20, alignment: .leading)
-
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            if let props = m.ozelliklerListe, !props.isEmpty {
-                                                HStack(spacing: 4) {
-                                                    ForEach(props, id: \.ozellik_id) { prop in
-                                                        Text(prop.tam_adi.lowercased())
-                                                            .font(.caption2.weight(.medium))
-                                                            .foregroundColor(.accentColor)
-                                                            .padding(.horizontal, 5)
-                                                            .padding(.vertical, 1)
-                                                            .background(Color.accentColor.opacity(0.1))
-                                                            .cornerRadius(3)
-                                                    }
-                                                }
-                                            }
-
-                                            Text(m.anlam)
-                                                .font(.body)
-
-                                            if let examples = m.orneklerListe, let eg = examples.first {
-                                                Text("“\(eg.ornek)”")
-                                                    .font(.callout)
-                                                    .italic()
-                                                    .foregroundColor(.secondary)
-                                                    .padding(.top, 1)
-                                            }
+                                    ActionMeaningRow(
+                                        meaning: m,
+                                        index: idx + 1,
+                                        onSelectWord: { word in
+                                            searchNewWord(word)
                                         }
-                                    }
+                                    )
                                 }
                             }
                         }
@@ -153,11 +192,23 @@ struct ActionLookupView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    if !wordText.isEmpty {
-                        Button("Uygulamada Aç") {
-                            onOpenInApp(wordText)
+                    HStack(spacing: 8) {
+                        if !wordHistory.isEmpty {
+                            Button(action: goBack) {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "chevron.left")
+                                        .font(.caption.weight(.semibold))
+                                    Text("Geri")
+                                }
+                            }
                         }
-                        .font(.footnote)
+
+                        if !wordText.isEmpty {
+                            Button("Uygulamada Aç") {
+                                onOpenInApp(wordText)
+                            }
+                            .font(.footnote)
+                        }
                     }
                 }
 
@@ -175,6 +226,26 @@ struct ActionLookupView: View {
                 }
             }
         }
+    }
+
+    private func compoundWords(_ raw: String) -> [String] {
+        return raw.components(separatedBy: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    private func searchNewWord(_ word: String) {
+        if !wordText.isEmpty {
+            wordHistory.append(wordText)
+        }
+        wordText = word
+        search(word: word)
+    }
+
+    private func goBack() {
+        guard let prev = wordHistory.popLast() else { return }
+        wordText = prev
+        search(word: prev)
     }
 
     private func search(word: String) {
@@ -218,5 +289,105 @@ struct ActionLookupView: View {
             let state = await DictionaryStore.shared.toggleFavorite(word: first.madde)
             self.isFavorite = state
         }
+    }
+}
+
+// MARK: - Action Meaning Row with Word Explorer
+struct ActionMeaningRow: View {
+    let meaning: Meaning
+    let index: Int
+    let onSelectWord: (String) -> Void
+
+    @State private var isWordExplorerOpen = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text("\(index).")
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(.accentColor)
+                .frame(width: 20, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 6) {
+                if let props = meaning.ozelliklerListe, !props.isEmpty {
+                    HStack(spacing: 4) {
+                        ForEach(props, id: \.ozellik_id) { prop in
+                            Text(prop.tam_adi.lowercased())
+                                .font(.caption2.weight(.medium))
+                                .foregroundColor(.accentColor)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(Color.accentColor.opacity(0.1))
+                                .cornerRadius(3)
+                        }
+                    }
+                }
+
+                Text(meaning.anlam)
+                    .font(.body)
+                    .textSelection(.enabled)
+
+                // Kelime Keşfet Çipleri
+                if !meaningWords.isEmpty {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isWordExplorerOpen.toggle()
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: isWordExplorerOpen ? "chevron.up.circle.fill" : "text.magnifyingglass")
+                                .font(.system(size: 10))
+                            Text(isWordExplorerOpen ? "Kelimeleri Gizle" : "Anlamdaki Kelimeleri Ara")
+                                .font(.caption2.weight(.medium))
+                        }
+                        .foregroundColor(.accentColor)
+                        .padding(.vertical, 2)
+                    }
+                    .buttonStyle(.plain)
+
+                    if isWordExplorerOpen {
+                        ActionFlowLayout(spacing: 6) {
+                            ForEach(meaningWords, id: \.self) { word in
+                                Button(action: {
+                                    onSelectWord(word)
+                                }) {
+                                    Text(word)
+                                        .font(.caption2.weight(.medium))
+                                        .padding(.horizontal, 7)
+                                        .padding(.vertical, 3)
+                                        .background(Color(.tertiarySystemFill))
+                                        .foregroundColor(.primary)
+                                        .cornerRadius(5)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.top, 2)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                }
+
+                if let examples = meaning.orneklerListe, let eg = examples.first {
+                    Text("“\(eg.ornek)”")
+                        .font(.callout)
+                        .italic()
+                        .foregroundColor(.secondary)
+                        .textSelection(.enabled)
+                        .padding(.top, 2)
+                }
+            }
+        }
+    }
+
+    private var meaningWords: [String] {
+        let tokens = meaning.anlam.split(whereSeparator: { $0.isWhitespace || $0.isNewline })
+        var words: [String] = []
+        let punctuation = CharacterSet.punctuationCharacters.union(.symbols)
+        for token in tokens {
+            let clean = token.trimmingCharacters(in: punctuation)
+            if clean.count >= 2 && !words.contains(clean) {
+                words.append(clean)
+            }
+        }
+        return words
     }
 }

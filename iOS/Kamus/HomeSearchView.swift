@@ -91,6 +91,9 @@ struct HomeSearchView: View {
                                     isFavorite: searchVM.isCurrentWordFavorite,
                                     onToggleFavorite: {
                                         searchVM.toggleFavorite(word: result.madde)
+                                    },
+                                    onSelectWord: { selected in
+                                        searchVM.search(word: selected)
                                     }
                                 )
                             }

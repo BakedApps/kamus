@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="kamus_primary">#1E2A5A</color>
+    <color name="kamus_primary_dark">#0F1633</color>
+    <color name="kamus_amber">#E8A33D</color>
+    <color name="kamus_cream">#F5EFE3</color>
+    <color name="kamus_surface">#FFFFFF</color>
+    <color name="kamus_background">#F8F9FA</color>
+</resources>

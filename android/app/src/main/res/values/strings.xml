@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Kâmus</string>
+    <string name="search_hint">Kelime ara…</string>
+    <string name="action_process_text">Kâmus\'ta Ara</string>
+    <string name="listen_word">Kelimeyi dinle</string>
+    <string name="favorite">Favori</string>
+    <string name="share">Paylaş</string>
+</resources>

@@ -88,11 +88,22 @@ iOS projesinde:
 - **KamusActionExtension:** Herhangi bir uygulamada (Safari, Kitaplar, Notlar, WhatsApp) seçilen kelimeye basılı tutup Paylaş -> **"Kâmus'ta Ara"** seçilerek uygulamadan ayrılmadan anlamı getiren eklenti.
 - **KamusWidgets:** WidgetKit ile Kilit Ekranı ve Ana Ekran için **Günün Kelimesi** ve **Hızlı Arama** widget'ları.
 
+### Android
+```bash
+# Android Studio ile android/ dizinini açabilirsiniz:
+open -a "Android Studio" android
+```
+
+Android projesinde (Kotlin + Jetpack Compose + Material 3):
+- **Sistem Context Menüsü (`ACTION_PROCESS_TEXT`):** Herhangi bir uygulamada (Chrome, Twitter, PDF okuyucu, WhatsApp vb.) metin seçtiğinizde çıkan sistem menüsünde (`Kopyala | Paylaş | ... | Kâmus`) doğrudan yer alır.
+- **Yarı Saydam Alt Çekmece (Floating Bottom Sheet):** `Kâmus` seçildiğinde mevcut uygulamadan çıkmadan şeffaf arka plan üzerinde anında kelime tanımını, telaffuzunu ve örneklerini getirir.
+- **Kamus (Android App):** Modern Material 3 tasarımıyla canlı arama, otomatik tamamlama, sesli telaffuz (Android TTS `tr-TR`), Günün Kelimesi, favoriler, arama geçmişi ve tanım içerisindeki kelimeleri tek dokunuşla keşfetme.
+- **Çevrimdışı SQLite Önbellek & Hedged Requests:** 2.5 sn üzeri geciken TDK isteklerine karşı otomatik paralel hedged request desteği ve yerel SQLite veritabanı.
+
 Kaynaklar:
 - `Sources/Kamus/`: macOS uygulaması ve ortak çekirdek (`TDKAPIClient.swift`, `DictionaryStore.swift`, `TurkishSpeechSpeaker.swift`).
-- `iOS/Kamus/`: iOS SwiftUI ana uygulaması.
-- `iOS/KamusActionExtension/`: iOS Action Extension.
-- `iOS/KamusWidgets/`: iOS WidgetKit eklentisi.
+- `iOS/`: iOS SwiftUI ana uygulaması, Action Extension ve WidgetKit.
+- `android/`: Android Jetpack Compose projesi (`app/src/main/`).
 
 ## Lisans ve kaynak
 

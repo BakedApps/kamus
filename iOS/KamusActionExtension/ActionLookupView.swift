@@ -191,6 +191,19 @@ struct ActionLookupView: View {
             .navigationTitle("Kâmus")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 6) {
+                        Image("KamusLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+                            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                            .accessibilityHidden(true)
+                        Text("Kâmus")
+                            .font(.headline)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
                 ToolbarItem(placement: .navigationBarLeading) {
                     HStack(spacing: 8) {
                         if !wordHistory.isEmpty {

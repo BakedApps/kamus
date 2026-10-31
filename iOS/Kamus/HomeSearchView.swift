@@ -3,11 +3,29 @@ import SwiftUI
 struct HomeSearchView: View {
     @EnvironmentObject var searchVM: MobileSearchViewModel
     @FocusState private var isInputFocused: Bool
+    @ScaledMetric(relativeTo: .largeTitle) private var logoSize = 40
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    HStack(spacing: 12) {
+                        Image("KamusLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: logoSize, height: logoSize)
+                            .clipShape(RoundedRectangle(cornerRadius: logoSize * 0.22, style: .continuous))
+                            .accessibilityHidden(true)
+
+                        Text("Kâmus")
+                            .font(.largeTitle.bold())
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                            .accessibilityAddTraits(.isHeader)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+
                     // Pano Öneri Kartı
                     if let clipWord = searchVM.clipboardWordSuggestion {
                         ClipboardBanner(
@@ -103,7 +121,7 @@ struct HomeSearchView: View {
                 }
                 .padding(.vertical, 8)
             }
-            .navigationTitle("Kâmus")
+            .toolbar(.hidden, for: .navigationBar)
             .background(Color(.systemGroupedBackground))
             .animation(.easeInOut(duration: 0.25), value: searchVM.clipboardWordSuggestion)
         }

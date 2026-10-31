@@ -587,7 +587,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "book.fill", accessibilityDescription: "Kâmus")
+            let mark = NSImage(contentsOf: Bundle.module.url(forResource: "KamusMark", withExtension: "png")!)
+            mark?.size = NSSize(width: 18, height: 18)
+            mark?.isTemplate = true
+            button.image = mark
+            button.setAccessibilityLabel("Kâmus")
             button.action = #selector(statusBarButtonClicked(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.target = self

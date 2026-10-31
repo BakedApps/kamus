@@ -212,8 +212,12 @@ struct WordOfTheDayWidgetEntryView: View {
     private var lockScreenCircularView: some View {
         ZStack {
             AccessoryWidgetBackground()
-            Image(systemName: "character.book.closed.fill")
-                .font(.title3)
+            Image("KamusMark")
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+                .accessibilityHidden(true)
         }
     }
 }

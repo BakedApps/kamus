@@ -45,9 +45,12 @@ struct QuickSearchWidgetView: View {
         case .systemSmall:
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Image(systemName: "character.book.closed.fill")
-                        .foregroundColor(.accentColor)
-                        .font(.title3)
+                    Image("KamusLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 32, height: 32)
+                        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                        .accessibilityHidden(true)
                     Spacer()
                 }
 
@@ -78,8 +81,12 @@ struct QuickSearchWidgetView: View {
         case .accessoryCircular:
             ZStack {
                 AccessoryWidgetBackground()
-                Image(systemName: "magnifyingglass")
-                    .font(.title3)
+                Image("KamusMark")
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 24, height: 24)
+                    .accessibilityHidden(true)
             }
             .widgetURL(URL(string: "kamus://search"))
 

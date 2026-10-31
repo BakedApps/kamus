@@ -181,8 +181,12 @@ struct SearchView: View {
         ZStack {
             VStack(spacing: 12) {
                 HStack(spacing: 6) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
+                    Image(nsImage: NSImage(contentsOf: Bundle.module.url(forResource: "KamusLogo", withExtension: "png")!)!)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                        .accessibilityHidden(true)
 
                     TextField("Kelime ara...", text: $viewModel.searchText)
                         .textFieldStyle(.plain)

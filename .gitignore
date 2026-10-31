@@ -20,6 +20,12 @@ Resources/seeds.sqlite
 *.swo
 *~
 
+# Android
+android/.gradle/
+android/.idea/
+android/local.properties
+android/captures/
+
 # macOS
 .DS_Store
 .AppleDouble

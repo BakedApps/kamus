@@ -1,0 +1,169 @@
+{
+  "generated_at": "2026-10-27T09:50:14Z",
+  "raw_dir": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/raw",
+  "framed_dir": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/upload",
+  "output_dir": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/review",
+  "approval_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/review/approved.json",
+  "summary": {
+    "total": 8,
+    "ready": 8,
+    "missing_raw": 0,
+    "invalid_size": 0,
+    "approved": 0,
+    "pending_approval": 8
+  },
+  "entries": [
+    {
+      "key": "tr|ipad|01-search",
+      "screenshot_id": "01-search",
+      "locale": "tr",
+      "device": "ipad",
+      "framed_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/upload/tr/ipad/01-search.png",
+      "framed_relative_path": "tr/ipad/01-search.png",
+      "raw_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/ipad/01-search.png",
+      "raw_relative_path": "tr/ipad/01-search.png",
+      "width": 2064,
+      "height": 2752,
+      "display_types": [
+        "APP_IPAD_PRO_3GEN_129"
+      ],
+      "valid_app_store_size": true,
+      "status": "ready",
+      "approved": false,
+      "approval_state": "pending"
+    },
+    {
+      "key": "tr|ipad|02-daily",
+      "screenshot_id": "02-daily",
+      "locale": "tr",
+      "device": "ipad",
+      "framed_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/upload/tr/ipad/02-daily.png",
+      "framed_relative_path": "tr/ipad/02-daily.png",
+      "raw_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/ipad/02-daily.png",
+      "raw_relative_path": "tr/ipad/02-daily.png",
+      "width": 2064,
+      "height": 2752,
+      "display_types": [
+        "APP_IPAD_PRO_3GEN_129"
+      ],
+      "valid_app_store_size": true,
+      "status": "ready",
+      "approved": false,
+      "approval_state": "pending"
+    },
+    {
+      "key": "tr|ipad|03-favorites",
+      "screenshot_id": "03-favorites",
+      "locale": "tr",
+      "device": "ipad",
+      "framed_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/upload/tr/ipad/03-favorites.png",
+      "framed_relative_path": "tr/ipad/03-favorites.png",
+      "raw_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/ipad/03-favorites.png",
+      "raw_relative_path": "tr/ipad/03-favorites.png",
+      "width": 2064,
+      "height": 2752,
+      "display_types": [
+        "APP_IPAD_PRO_3GEN_129"
+      ],
+      "valid_app_store_size": true,
+      "status": "ready",
+      "approved": false,
+      "approval_state": "pending"
+    },
+    {
+      "key": "tr|ipad|04-history",
+      "screenshot_id": "04-history",
+      "locale": "tr",
+      "device": "ipad",
+      "framed_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/upload/tr/ipad/04-history.png",
+      "framed_relative_path": "tr/ipad/04-history.png",
+      "raw_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/ipad/04-history.png",
+      "raw_relative_path": "tr/ipad/04-history.png",
+      "width": 2064,
+      "height": 2752,
+      "display_types": [
+        "APP_IPAD_PRO_3GEN_129"
+      ],
+      "valid_app_store_size": true,
+      "status": "ready",
+      "approved": false,
+      "approval_state": "pending"
+    },
+    {
+      "key": "tr|iphone|01-search",
+      "screenshot_id": "01-search",
+      "locale": "tr",
+      "device": "iphone",
+      "framed_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/upload/tr/iphone/01-search.png",
+      "framed_relative_path": "tr/iphone/01-search.png",
+      "raw_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/iphone/01-search.png",
+      "raw_relative_path": "tr/iphone/01-search.png",
+      "width": 1242,
+      "height": 2688,
+      "display_types": [
+        "APP_IPHONE_65"
+      ],
+      "valid_app_store_size": true,
+      "status": "ready",
+      "approved": false,
+      "approval_state": "pending"
+    },
+    {
+      "key": "tr|iphone|02-daily",
+      "screenshot_id": "02-daily",
+      "locale": "tr",
+      "device": "iphone",
+      "framed_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/upload/tr/iphone/02-daily.png",
+      "framed_relative_path": "tr/iphone/02-daily.png",
+      "raw_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/iphone/02-daily.png",
+      "raw_relative_path": "tr/iphone/02-daily.png",
+      "width": 1242,
+      "height": 2688,
+      "display_types": [
+        "APP_IPHONE_65"
+      ],
+      "valid_app_store_size": true,
+      "status": "ready",
+      "approved": false,
+      "approval_state": "pending"
+    },
+    {
+      "key": "tr|iphone|03-favorites",
+      "screenshot_id": "03-favorites",
+      "locale": "tr",
+      "device": "iphone",
+      "framed_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/upload/tr/iphone/03-favorites.png",
+      "framed_relative_path": "tr/iphone/03-favorites.png",
+      "raw_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/iphone/03-favorites.png",
+      "raw_relative_path": "tr/iphone/03-favorites.png",
+      "width": 1242,
+      "height": 2688,
+      "display_types": [
+        "APP_IPHONE_65"
+      ],
+      "valid_app_store_size": true,
+      "status": "ready",
+      "approved": false,
+      "approval_state": "pending"
+    },
+    {
+      "key": "tr|iphone|04-history",
+      "screenshot_id": "04-history",
+      "locale": "tr",
+      "device": "iphone",
+      "framed_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/upload/tr/iphone/04-history.png",
+      "framed_relative_path": "tr/iphone/04-history.png",
+      "raw_path": "/Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/iphone/04-history.png",
+      "raw_relative_path": "tr/iphone/04-history.png",
+      "width": 1242,
+      "height": 2688,
+      "display_types": [
+        "APP_IPHONE_65"
+      ],
+      "valid_app_store_size": true,
+      "status": "ready",
+      "approved": false,
+      "approval_state": "pending"
+    }
+  ]
+}

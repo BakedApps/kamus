@@ -1,0 +1,856 @@
+{
+  "schemaVersion": 3,
+  "appName": "Kâmus",
+  "themeId": "warm-editorial",
+  "fontId": "template-serif",
+  "connectedCanvas": true,
+  "locales": [
+    "tr"
+  ],
+  "locale": "tr",
+  "device": "ipad",
+  "orientation": "portrait",
+  "appIcon": "/app-icon-v3.png",
+  "slidesByDevice": {
+    "iphone": [
+      {
+        "id": "kamus-1",
+        "layout": "hero",
+        "label": {
+          "tr": "KÂMUS’TA ARA"
+        },
+        "headline": {
+          "tr": "Okumayı bölme.\nAnlamını öğren."
+        },
+        "screenshot": "/screenshots/extension-v3.png",
+        "inverted": false,
+        "transforms": {
+          "caption": {
+            "x": 82,
+            "y": 140,
+            "width": 1156,
+            "height": 610
+          },
+          "device": {
+            "x": 150,
+            "y": 790,
+            "width": 1020,
+            "height": 2190,
+            "rotation": 0
+          }
+        },
+        "textElements": [
+          {
+            "id": "hero-sub",
+            "text": {
+              "tr": "Başka bir uygulamadayken, tek bir paylaşım eylemiyle."
+            },
+            "transform": {
+              "x": 88,
+              "y": 602,
+              "width": 1144,
+              "height": 120
+            },
+            "fontSize": 40,
+            "fontWeight": 400,
+            "color": "#594438",
+            "align": "center"
+          }
+        ]
+      },
+      {
+        "id": "kamus-2",
+        "layout": "device-top",
+        "label": {
+          "tr": "SEÇ · PAYLAŞ · KÂMUS’TA ARA"
+        },
+        "headline": {
+          "tr": "Kelimeyi seç.\nKâmus’ta ara."
+        },
+        "screenshot": "/screenshots/share-menu-v3.png",
+        "inverted": true,
+        "transforms": {
+          "device": {
+            "x": 150,
+            "y": -130,
+            "width": 1020,
+            "height": 2190
+          },
+          "caption": {
+            "x": 82,
+            "y": 2220,
+            "width": 1156,
+            "height": 550
+          },
+          "callout": {
+            "x": 541.0623145400602,
+            "y": 1752.409495548962,
+            "width": 690,
+            "height": 350,
+            "rotation": -4,
+            "zIndex": 5
+          }
+        },
+        "callout": {
+          "focusX": 0.61,
+          "focusY": 0.91,
+          "zoom": 2,
+          "shape": "rounded"
+        }
+      },
+      {
+        "id": "kamus-3",
+        "layout": "device-bottom",
+        "label": {
+          "tr": "TÜRKÇE SÖZLÜK"
+        },
+        "headline": {
+          "tr": "Anlamını bul.\nSöyleyişini dinle."
+        },
+        "screenshot": "/screenshots/search-v3.png",
+        "inverted": false,
+        "transforms": {
+          "caption": {
+            "x": 82,
+            "y": 130,
+            "width": 1156,
+            "height": 580
+          },
+          "device": {
+            "x": 235,
+            "y": 770,
+            "width": 1020,
+            "height": 2190,
+            "rotation": 4
+          }
+        }
+      },
+      {
+        "id": "kamus-4",
+        "layout": "hero",
+        "label": {
+          "tr": "SANA AİT BİR SÖZLÜK"
+        },
+        "headline": {
+          "tr": "Sevdiğin kelimeler,\nhep yanında."
+        },
+        "screenshot": "/screenshots/favorites-v3.png",
+        "inverted": false,
+        "backgroundColor": "#E7C5A8",
+        "transforms": {
+          "caption": {
+            "x": 82,
+            "y": 130,
+            "width": 1156,
+            "height": 610
+          },
+          "device": {
+            "x": 90,
+            "y": 780,
+            "width": 1020,
+            "height": 2190,
+            "rotation": -4
+          }
+        }
+      }
+    ],
+    "android": [
+      {
+        "id": "s_mvqkvi9n_5",
+        "layout": "hero",
+        "label": {
+          "en": "MEET YOUR APP"
+        },
+        "headline": {
+          "en": "Sell one\nidea per slide."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_6",
+        "layout": "device-bottom",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "Your headline\nlives here."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_7",
+        "layout": "two-devices",
+        "label": {
+          "en": "FEATURE 02"
+        },
+        "headline": {
+          "en": "Show two\nscreens at once."
+        },
+        "screenshot": "",
+        "screenshotSecondary": ""
+      },
+      {
+        "id": "s_mvqkvi9n_8",
+        "layout": "device-top",
+        "label": {
+          "en": "FEATURE 03"
+        },
+        "headline": {
+          "en": "Flip the contrast\nfor visual rhythm."
+        },
+        "screenshot": "",
+        "inverted": true
+      },
+      {
+        "id": "s_mvqkvi9n_9",
+        "layout": "no-device",
+        "label": {
+          "en": "MORE"
+        },
+        "headline": {
+          "en": "And so\nmuch more."
+        },
+        "screenshot": ""
+      }
+    ],
+    "ipad": [
+      {
+        "id": "kamus-ipad-1",
+        "layout": "hero",
+        "label": {
+          "tr": "KÂMUS’TA ARA"
+        },
+        "headline": {
+          "tr": "Okumayı bölme.\nAnlamını öğren."
+        },
+        "screenshot": "/screenshots/ipad-extension-v4.png",
+        "inverted": false,
+        "transforms": {
+          "caption": {
+            "x": 130,
+            "y": 100,
+            "width": 1804,
+            "height": 490
+          },
+          "device": {
+            "x": 207,
+            "y": 740,
+            "width": 1650,
+            "height": 2200,
+            "rotation": 0
+          }
+        },
+        "textElements": [
+          {
+            "id": "hero-sub",
+            "text": {
+              "tr": "Başka bir uygulamadayken, tek bir paylaşım eylemiyle."
+            },
+            "transform": {
+              "x": 180,
+              "y": 590,
+              "width": 1704,
+              "height": 100
+            },
+            "fontSize": 48,
+            "fontWeight": 400,
+            "color": "#594438",
+            "align": "center"
+          }
+        ],
+        "typography": {
+          "headlineScale": 0.9
+        }
+      },
+      {
+        "id": "kamus-ipad-2",
+        "layout": "device-top",
+        "label": {
+          "tr": "SEÇ · PAYLAŞ · KÂMUS’TA ARA"
+        },
+        "headline": {
+          "tr": "Kelimeyi seç.\nKâmus’ta ara."
+        },
+        "screenshot": "/screenshots/ipad-share-menu-v4.png",
+        "inverted": true,
+        "transforms": {
+          "caption": {
+            "x": 130,
+            "y": 2190,
+            "width": 1804,
+            "height": 490
+          },
+          "device": {
+            "x": 207,
+            "y": -210,
+            "width": 1650,
+            "height": 2200,
+            "rotation": 0
+          },
+          "callout": {
+            "x": 1100,
+            "y": 1510,
+            "width": 800,
+            "height": 420,
+            "rotation": -4,
+            "zIndex": 5
+          }
+        },
+        "callout": {
+          "focusX": 0.528,
+          "focusY": 0.55,
+          "zoom": 2,
+          "shape": "rounded"
+        }
+      },
+      {
+        "id": "kamus-ipad-3",
+        "layout": "device-bottom",
+        "label": {
+          "tr": "TÜRKÇE SÖZLÜK"
+        },
+        "headline": {
+          "tr": "Anlamını bul.\nSöyleyişini dinle."
+        },
+        "screenshot": "/screenshots/ipad-search-v4.png",
+        "inverted": false,
+        "transforms": {
+          "caption": {
+            "x": 130,
+            "y": 100,
+            "width": 1804,
+            "height": 490
+          },
+          "device": {
+            "x": 280,
+            "y": 700,
+            "width": 1650,
+            "height": 2200,
+            "rotation": 3
+          }
+        }
+      },
+      {
+        "id": "kamus-ipad-4",
+        "layout": "hero",
+        "label": {
+          "tr": "SANA AİT BİR SÖZLÜK"
+        },
+        "headline": {
+          "tr": "Sevdiğin kelimeler,\nhep yanında."
+        },
+        "screenshot": "/screenshots/ipad-favorites-v4.png",
+        "inverted": false,
+        "backgroundColor": "#E7C5A8",
+        "transforms": {
+          "caption": {
+            "x": 130,
+            "y": 100,
+            "width": 1804,
+            "height": 490
+          },
+          "device": {
+            "x": 125,
+            "y": 700,
+            "width": 1650,
+            "height": 2200,
+            "rotation": -3
+          }
+        },
+        "typography": {
+          "headlineScale": 0.78
+        }
+      }
+    ],
+    "tvos": [
+      {
+        "id": "s_mvqkvi9n_d",
+        "layout": "hero",
+        "label": {
+          "en": "MEET YOUR APP"
+        },
+        "headline": {
+          "en": "Made for\nthe living room."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_e",
+        "layout": "split-landscape",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "One idea\nper screen."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_f",
+        "layout": "device-top",
+        "label": {
+          "en": "FEATURE 02"
+        },
+        "headline": {
+          "en": "Flip the contrast."
+        },
+        "screenshot": "",
+        "inverted": true
+      },
+      {
+        "id": "s_mvqkvi9n_g",
+        "layout": "no-device",
+        "label": {
+          "en": "MORE"
+        },
+        "headline": {
+          "en": "And so\nmuch more."
+        },
+        "screenshot": ""
+      }
+    ],
+    "watchos": [
+      {
+        "id": "s_mvqkvi9n_h",
+        "layout": "hero",
+        "label": {
+          "en": "MEET YOUR APP"
+        },
+        "headline": {
+          "en": "On your\nwrist."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_i",
+        "layout": "device-bottom",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "One glance.\nDone."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_j",
+        "layout": "device-top",
+        "label": {
+          "en": "FEATURE 02"
+        },
+        "headline": {
+          "en": "Always\nwith you."
+        },
+        "screenshot": "",
+        "inverted": true
+      }
+    ],
+    "carplay": [
+      {
+        "id": "s_mvqkvi9n_k",
+        "layout": "split-landscape",
+        "label": {
+          "en": "CARPLAY"
+        },
+        "headline": {
+          "en": "Eyes on\nthe road."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_l",
+        "layout": "device-bottom",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "Everything, one tap away."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_m",
+        "layout": "device-top",
+        "label": {
+          "en": "FEATURE 02"
+        },
+        "headline": {
+          "en": "Made for every drive."
+        },
+        "screenshot": "",
+        "inverted": true
+      }
+    ],
+    "mac": [
+      {
+        "id": "s_mvqkvi9n_n",
+        "layout": "hero",
+        "label": {
+          "en": "MEET YOUR APP"
+        },
+        "headline": {
+          "en": "Made for\nyour Mac."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_o",
+        "layout": "split-landscape",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "Everything in\none window."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_p",
+        "layout": "device-top",
+        "label": {
+          "en": "FEATURE 02"
+        },
+        "headline": {
+          "en": "One shortcut away."
+        },
+        "screenshot": "",
+        "inverted": true
+      },
+      {
+        "id": "s_mvqkvi9n_q",
+        "layout": "two-devices",
+        "label": {
+          "en": "FEATURE 03"
+        },
+        "headline": {
+          "en": "Work across windows."
+        },
+        "screenshot": "",
+        "screenshotSecondary": ""
+      },
+      {
+        "id": "s_mvqkvi9n_r",
+        "layout": "no-device",
+        "label": {
+          "en": "MORE"
+        },
+        "headline": {
+          "en": "And so\nmuch more."
+        },
+        "screenshot": ""
+      }
+    ],
+    "android-7": [
+      {
+        "id": "s_mvqkvi9n_s",
+        "layout": "hero",
+        "label": {
+          "en": "MEET YOUR APP"
+        },
+        "headline": {
+          "en": "Pocket-sized\npower."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_t",
+        "layout": "split-landscape",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "Wide canvas,\nbigger ideas."
+        },
+        "screenshot": ""
+      }
+    ],
+    "android-10": [
+      {
+        "id": "s_mvqkvi9n_u",
+        "layout": "hero",
+        "label": {
+          "en": "MEET YOUR APP"
+        },
+        "headline": {
+          "en": "Made for\nthe big screen."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_v",
+        "layout": "split-landscape",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "Wide canvas,\nbigger ideas."
+        },
+        "screenshot": ""
+      }
+    ],
+    "feature-graphic": [
+      {
+        "id": "s_mvqkvi9n_w",
+        "layout": "feature-graphic",
+        "label": {},
+        "headline": {
+          "en": "Your tagline goes here."
+        },
+        "screenshot": ""
+      }
+    ],
+    "duo-outer": [
+      {
+        "id": "s_mvqkvi9n_x",
+        "layout": "hero",
+        "label": {
+          "en": "MEET YOUR APP"
+        },
+        "headline": {
+          "en": "Everything,\none hand."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_y",
+        "layout": "device-bottom",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "One idea\nper screen."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_z",
+        "layout": "two-devices",
+        "label": {
+          "en": "OPEN IT"
+        },
+        "headline": {
+          "en": "Open it for\nthe full view."
+        },
+        "screenshot": "",
+        "screenshotSecondary": ""
+      },
+      {
+        "id": "s_mvqkvi9n_10",
+        "layout": "device-top",
+        "label": {
+          "en": "FEATURE 02"
+        },
+        "headline": {
+          "en": "Flip the contrast."
+        },
+        "screenshot": "",
+        "inverted": true
+      },
+      {
+        "id": "s_mvqkvi9n_11",
+        "layout": "no-device",
+        "label": {
+          "en": "MORE"
+        },
+        "headline": {
+          "en": "And so\nmuch more."
+        },
+        "screenshot": ""
+      }
+    ],
+    "duo-outer-landscape": [
+      {
+        "id": "s_mvqkvi9n_12",
+        "layout": "hero",
+        "label": {
+          "en": "TURN IT"
+        },
+        "headline": {
+          "en": "Made for the wide view."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_13",
+        "layout": "split-landscape",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "One idea\nper screen."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_14",
+        "layout": "device-top",
+        "label": {
+          "en": "FEATURE 02"
+        },
+        "headline": {
+          "en": "Flip the contrast."
+        },
+        "screenshot": "",
+        "inverted": true
+      }
+    ],
+    "duo-inner": [
+      {
+        "id": "s_mvqkvi9n_15",
+        "layout": "hero",
+        "label": {
+          "en": "UNFOLD IT"
+        },
+        "headline": {
+          "en": "Room for\nthe whole view."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_16",
+        "layout": "device-bottom",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "One idea\nper screen."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_17",
+        "layout": "two-devices",
+        "label": {
+          "en": "FOLDED + OPEN"
+        },
+        "headline": {
+          "en": "Turn it, open it,\nkeep going."
+        },
+        "screenshot": "",
+        "screenshotSecondary": ""
+      },
+      {
+        "id": "s_mvqkvi9n_18",
+        "layout": "device-top",
+        "label": {
+          "en": "FEATURE 02"
+        },
+        "headline": {
+          "en": "Flip the contrast."
+        },
+        "screenshot": "",
+        "inverted": true
+      }
+    ],
+    "duo-inner-landscape": [
+      {
+        "id": "s_mvqkvi9n_19",
+        "layout": "hero",
+        "label": {
+          "en": "UNFOLD IT"
+        },
+        "headline": {
+          "en": "Lead with the two-pane view."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_1a",
+        "layout": "two-devices",
+        "label": {
+          "en": "FOLDED + OPEN"
+        },
+        "headline": {
+          "en": "Same moment, closed and open."
+        },
+        "screenshot": "",
+        "screenshotSecondary": ""
+      },
+      {
+        "id": "s_mvqkvi9n_1b",
+        "layout": "split-landscape",
+        "label": {
+          "en": "FEATURE 02"
+        },
+        "headline": {
+          "en": "One idea\nper screen."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvqkvi9n_1c",
+        "layout": "device-top",
+        "label": {
+          "en": "FEATURE 03"
+        },
+        "headline": {
+          "en": "Show what only the wide screen can."
+        },
+        "screenshot": "",
+        "inverted": true
+      },
+      {
+        "id": "s_mvqkvi9n_1d",
+        "layout": "no-device",
+        "label": {
+          "en": "MORE"
+        },
+        "headline": {
+          "en": "And so much more."
+        },
+        "screenshot": ""
+      }
+    ],
+    "creative-universal": [
+      {
+        "id": "s_mvqkvi9n_1e",
+        "layout": "split-landscape",
+        "label": {
+          "en": "NEW"
+        },
+        "headline": {
+          "en": "Your app,\nat a glance."
+        },
+        "screenshot": ""
+      }
+    ],
+    "creative-header": [
+      {
+        "id": "s_mvqkvi9n_1f",
+        "layout": "split-landscape",
+        "label": {
+          "en": "NEW"
+        },
+        "headline": {
+          "en": "Your app,\nat a glance."
+        },
+        "screenshot": ""
+      }
+    ],
+    "creative-search": [
+      {
+        "id": "s_mvqkvi9n_1g",
+        "layout": "split-landscape",
+        "label": {
+          "en": "NEW"
+        },
+        "headline": {
+          "en": "Your app,\nat a glance."
+        },
+        "screenshot": ""
+      }
+    ]
+  },
+  "scene": {
+    "backdrop": "solid",
+    "span": true,
+    "decoration": "none",
+    "shadow": 45,
+    "glow": 0,
+    "tilt": 0,
+    "headlineWeight": 600,
+    "headlineScale": 1.1,
+    "headlineCase": "as-typed",
+    "captionAlign": "center"
+  }
+}

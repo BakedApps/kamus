@@ -12,7 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Sparkles
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +20,14 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -28,6 +36,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import cloud.bakedapps.kamus.data.db.DictionaryStore
@@ -71,9 +80,9 @@ class MainActivity : ComponentActivity() {
         checkClipboard()
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        intent?.let { handleIntent(it) }
+        handleIntent(intent)
     }
 
     private fun handleIntent(intent: Intent) {
@@ -112,7 +121,7 @@ class MainActivity : ComponentActivity() {
 
 enum class NavigationItem(val title: String, val icon: ImageVector) {
     SEARCH("Ara", Icons.Default.Search),
-    WORD_OF_DAY("Günün Kelimesi", Icons.Default.Sparkles),
+    WORD_OF_DAY("Günün Kelimesi", Icons.Default.AutoAwesome),
     FAVORITES("Favoriler", Icons.Default.Bookmark),
     HISTORY("Geçmiş", Icons.Default.History)
 }
@@ -133,16 +142,23 @@ fun MainAppScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = when (selectedTab) {
-                            0 -> "Kâmus"
-                            1 -> "Günün Kelimesi"
-                            2 -> "Favoriler"
-                            3 -> "Arama Geçmişi"
-                            else -> "Kâmus"
-                        },
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Image(
+                            painter = painterResource(R.drawable.kamus_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp).clip(RoundedCornerShape(7.dp))
+                        )
+                        Text(
+                            text = when (selectedTab) {
+                                0 -> "Kâmus"
+                                1 -> "Günün Kelimesi"
+                                2 -> "Favoriler"
+                                3 -> "Arama Geçmişi"
+                                else -> "Kâmus"
+                            },
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,

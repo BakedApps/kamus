@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.NorthWest
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Sparkles
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -78,7 +78,7 @@ fun HomeSearchScreen(
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
-    val focusManager = LocalFocusManager()
+    val focusManager = LocalFocusManager.current
 
     var searchQuery by remember { mutableStateOf("") }
     var results by remember { mutableStateOf<List<WordResult>>(emptyList()) }
@@ -330,7 +330,7 @@ fun HomeSearchScreen(
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    imageVector = Icons.Default.Sparkles,
+                                    imageVector = Icons.Default.AutoAwesome,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.secondary,
                                     modifier = Modifier.size(16.dp)
@@ -343,7 +343,7 @@ fun HomeSearchScreen(
                                 )
                             }
                             Spacer(modifier = Modifier.height(8.dp))
-                            Row(verticalAlignment = Alignment.Baseline) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = first.madde,
                                     style = MaterialTheme.typography.headlineMedium,

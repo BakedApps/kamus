@@ -110,3 +110,11 @@ Kaynaklar:
 [MIT](LICENSE) lisansıyla dağıtılır. © 2026 BakedApps.
 
 Kelime verileri Türk Dil Kurumu'nun herkese açık `sozluk.gov.tr` servisinden alınır. **Bu bir Türk Dil Kurumu ürünü değildir**; kurumla resmî bir bağı veya kurumun onayı yoktur. Tüm sözlük içeriğinin hakları Türk Dil Kurumu'na aittir.
+
+### Logo dosyaları
+
+Logonun ana kaynağı proje kökündeki `kamus.png` dosyasıdır. Dosya değiştiğinde
+Pillow kurulu bir Python ortamıyla `python3 scripts/make_icon.py` çalıştırın.
+Bu komut macOS, iOS ve Android ikonlarını, ortak `Brand.xcassets` görsellerini,
+paylaşım menüsündeki “Kâmus’ta Ara” simgesini ve tanıtım ikonunu günceller.
+Paylaşım simgesi ve menü çubuğu için logonun şeffaf, tek renkli maskesi üretilir.

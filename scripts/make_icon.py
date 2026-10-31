@@ -1,172 +1,129 @@
 #!/usr/bin/env python3
-"""Kâmus uygulama ikonunu üretir.
+"""Generate all Kâmus brand assets from kamus.png (requires Pillow).
 
-Logo, Türkçe imlasına özgü düzeltme işaretini (şapka) kahraman öge yapar:
-krem rengi bir "a" ve üzerinde kehribar bir şapka. Şapka fontun kendi glifi
-yerine elle çizilir; böylece küçük boyutlarda kalınlığı kontrol edilebiliyor.
-
-Menü çubuğu için ayrı bir glif üretilmiyor: 18px'te "â" markası okunmuyor
-(harfin gözü doluyor, şapka gövdeye karışıyor), bu yüzden orada SF Symbol
-`book.fill` kullanılıyor — piksel hinting'i sayesinde net ve template olarak
-açık/koyu menü çubuğuna kendiliğinden uyum sağlıyor.
-
-Çıktılar (üretilmiş hâlleriyle repoya işlenir, derleme Python gerektirmez):
-    Resources/AppIcon.icns
-    Resources/AppIcon-preview.png   (README için)
-
-Kullanım: python3 scripts/make_icon.py
+Run after replacing the master: python3 scripts/make_icon.py
+Action extensions use the extracted alpha mask, never the opaque app tile.
 """
-
-import math
+import argparse
+import json
 import shutil
 import subprocess
-import sys
 from pathlib import Path
-
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw
 
 ROOT = Path(__file__).resolve().parent.parent
-RESOURCES = ROOT / "Resources"
-FONT_PATH = "/System/Library/Fonts/Supplemental/Georgia Bold.ttf"
-
-# Renkler
-INK_TOP = (30, 42, 90)      # #1E2A5A
-INK_BOTTOM = (15, 22, 51)   # #0F1633
-CREAM = (245, 239, 227)     # #F5EFE3
-AMBER = (232, 163, 61)      # #E8A33D
-
-# macOS Big Sur+ oranları: 1024 tuvalde ortalanmış 824'lük squircle
-CANVAS = 1024
-PLATE = 824
-SUPERELLIPSE_N = 5.0        # Apple'ın squircle'ına yakın üs
-SUPERSAMPLE = 4             # kenar yumuşatma için ölçek
+RESOURCES = ROOT / 'Resources'
 
 
-def superellipse_mask(size: int, n: float = SUPERELLIPSE_N) -> Image.Image:
-    """Squircle maskesi. Her satırın x genişliği analitik hesaplanır, bu yüzden
-    yüksek çözünürlükte bile anlıktır; supersampling kenarları yumuşatır."""
-    hi = size * SUPERSAMPLE
-    mask = Image.new("L", (hi, hi), 0)
-    draw = ImageDraw.Draw(mask)
-    a = b = hi / 2.0
-    for row in range(hi):
-        y = (row + 0.5) - b
-        t = 1.0 - abs(y / b) ** n
-        if t <= 0:
-            continue
-        half = a * t ** (1.0 / n)
-        draw.rectangle([a - half, row, a + half - 1, row], fill=255)
-    return mask.resize((size, size), Image.LANCZOS)
+def save(image, path):
+    path = ROOT / path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    image.save(path)
 
 
-def vertical_gradient(size: int, top: tuple, bottom: tuple) -> Image.Image:
-    grad = Image.new("RGB", (1, size))
-    for y in range(size):
-        f = y / max(size - 1, 1)
-        grad.putpixel((0, y), tuple(round(top[i] + (bottom[i] - top[i]) * f) for i in range(3)))
-    return grad.resize((size, size), Image.BICUBIC)
+def mark_mask(master):
+    # Both the cream letter and amber accent have red well above blue.
+    # The navy background has the opposite relationship. Keep edge coverage.
+    red, _, blue = master.split()
+    mask = ImageChops.subtract(red, blue).point(lambda v: min(255, v * 8))
+    return mask.crop(mask.getbbox())
 
 
-def draw_circumflex(draw: ImageDraw.ImageDraw, cx: float, apex_y: float,
-                    width: float, height: float, thickness: float, color) -> None:
-    """Yuvarlatılmış uçlu şapka (ˆ): tepe noktasından iki yana inen iki kalın kol."""
-    half = width / 2.0
-    left = (cx - half, apex_y + height)
-    apex = (cx, apex_y)
-    right = (cx + half, apex_y + height)
-    draw.line([left, apex, right], fill=color, width=round(thickness), joint="curve")
-    # joint="curve" yalnızca köşeyi yuvarlar; uçları da yuvarlatmak için birer daire
-    r = thickness / 2.0
-    for (px, py) in (left, right):
-        draw.ellipse([px - r, py - r, px + r, py + r], fill=color)
+def centered_mark(mask, size, fraction=0.70):
+    mark = mask.copy()
+    mark.thumbnail((round(size * fraction), round(size * fraction)), Image.Resampling.LANCZOS)
+    alpha = Image.new('L', (size, size))
+    alpha.paste(mark, ((size - mark.width) // 2, (size - mark.height) // 2))
+    result = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    result.putalpha(alpha)
+    return result
 
 
-def render_mark(size: int, letter_color, accent_color, glyph_scale: float = 0.70) -> Image.Image:
-    """'â' markasını verilen tuval boyutunda saydam zemine çizer."""
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-
-    font_size = round(size * glyph_scale)
-    font = ImageFont.truetype(FONT_PATH, font_size)
-    bbox = font.getbbox("a")
-    a_w, a_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
-
-    # Şapka ölçüleri, "a" genişliğine oranlı. Tipografide düzeltme işareti
-    # harften dar ve ona yakın durur; geniş/uzak olursa çatı gibi okunuyor.
-    cx_width = a_w * 0.60
-    cx_height = a_w * 0.24
-    cx_thick = max(size * 0.046, 2.0)
-    gap = a_w * 0.12
-
-    group_h = cx_height + gap + a_h
-    top = (size - group_h) / 2.0
-
-    apex_y = top + cx_thick / 2.0
-    a_x = (size - a_w) / 2.0 - bbox[0]
-    a_y = top + cx_height + gap - bbox[1]
-
-    draw.text((a_x, a_y), "a", font=font, fill=letter_color)
-    draw_circumflex(draw, size / 2.0, apex_y, cx_width, cx_height, cx_thick, accent_color)
-    return img
+def action_icons(mask):
+    directory = 'iOS/KamusActionExtension'
+    for scale in (1, 2, 3):
+        suffix = '' if scale == 1 else f'@{scale}x'
+        icon = centered_mark(mask, 60 * scale)
+        save(icon, f'{directory}/ActionIcon{suffix}.png')
+        if scale > 1:
+            save(icon, f'{directory}/Assets.xcassets/AppIcon.appiconset/icon-60@{scale}x.png')
+    for size, filename in ((152, 'icon-76@2x.png'), (167, 'icon-83.5@2x.png'), (1024, 'icon-1024.png')):
+        save(centered_mark(mask, size), f'{directory}/Assets.xcassets/AppIcon.appiconset/{filename}')
+    path = ROOT / directory / 'Assets.xcassets/AppIcon.appiconset/Contents.json'
+    contents = json.loads(path.read_text())
+    contents['images'] = [
+        {'filename': f'icon-60@{scale}x.png', 'idiom': 'iphone', 'scale': f'{scale}x', 'size': '60x60'}
+        for scale in (2, 3)
+    ] + [
+        {'filename': 'icon-76@2x.png', 'idiom': 'ipad', 'scale': '2x', 'size': '76x76'},
+        {'filename': 'icon-83.5@2x.png', 'idiom': 'ipad', 'scale': '2x', 'size': '83.5x83.5'},
+        {'filename': 'icon-1024.png', 'idiom': 'ios-marketing', 'size': '1024x1024'},
+    ]
+    path.write_text(json.dumps(contents, indent=2) + '\n')
 
 
-def build_app_icon(glyph_scale: float = 0.70) -> Image.Image:
-    icon = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--action-only', action='store_true')
+    args = parser.parse_args()
+    master = Image.open(ROOT / 'kamus.png').convert('RGB')
+    if master.width != master.height:
+        raise ValueError('kamus.png must be square; do not stretch the logo.')
+    mask = mark_mask(master)
+    action_icons(mask)
+    if args.action_only:
+        return
+    full = master.resize((1024, 1024), Image.Resampling.LANCZOS)
+    save(full, 'iOS/Kamus/Assets.xcassets/AppIcon.appiconset/icon-1024.png')
+    save(full, 'Resources/AppIcon-fullbleed-v2.png')
+    logo = master.resize((192, 192), Image.Resampling.LANCZOS)
+    for path in ('Sources/Kamus/Resources/KamusLogo.png', 'android/app/src/main/res/drawable-nodpi/kamus_logo.png'):
+        save(logo, path)
+    template = centered_mark(mask, 128, 0.84)
+    for path in ('Sources/Kamus/Resources/KamusMark.png',):
+        save(template, path)
 
-    plate = vertical_gradient(PLATE, INK_TOP, INK_BOTTOM).convert("RGBA")
-    plate.putalpha(superellipse_mask(PLATE))
+    catalog = RESOURCES / 'Brand.xcassets'
+    catalog.mkdir(exist_ok=True)
+    (catalog / 'Contents.json').write_text(json.dumps({'info': {'author': 'xcode', 'version': 1}}, indent=2) + '\n')
+    for name, image in (('KamusLogo', logo), ('KamusMark', template)):
+        directory = catalog / (name + '.imageset')
+        directory.mkdir(exist_ok=True)
+        image.save(directory / (name + '.png'))
+        contents = {'images': [{'filename': name + '.png', 'idiom': 'universal'}], 'info': {'author': 'xcode', 'version': 1}}
+        if name == 'KamusMark':
+            contents['properties'] = {'template-rendering-intent': 'template'}
+        (directory / 'Contents.json').write_text(json.dumps(contents, indent=2) + '\n')
 
-    # Üst kenarda hafif iç parlaklık (macOS'un camsı görünümü)
-    sheen = Image.new("RGBA", (PLATE, PLATE), (0, 0, 0, 0))
-    sheen_draw = ImageDraw.Draw(sheen)
-    for y in range(round(PLATE * 0.42)):
-        alpha = round(26 * (1 - y / (PLATE * 0.42)))
-        sheen_draw.rectangle([0, y, PLATE, y], fill=(255, 255, 255, alpha))
-    sheen.putalpha(Image.composite(sheen.getchannel("A"), Image.new("L", sheen.size, 0),
-                                   superellipse_mask(PLATE)))
-    plate = Image.alpha_composite(plate, sheen)
-
-    mark = render_mark(PLATE, CREAM, AMBER, glyph_scale=glyph_scale)
-    plate = Image.alpha_composite(plate, mark)
-
-    icon.paste(plate, ((CANVAS - PLATE) // 2, (CANVAS - PLATE) // 2), plate)
-    return icon
-
-
-def build_icns(icon: Image.Image, small_icon: Image.Image) -> None:
-    """32px ve altındaki temsiller kalınlaştırılmış masterdan üretilir: ince serif
-    detaylar o ölçekte kayboluyor ve glif lekeye dönüşüyor."""
-    iconset = RESOURCES / "AppIcon.iconset"
-    if iconset.exists():
-        shutil.rmtree(iconset)
-    iconset.mkdir(parents=True)
-
-    def emit(px: int, name: str) -> None:
-        master = small_icon if px <= 32 else icon
-        master.resize((px, px), Image.LANCZOS).save(iconset / name)
-
-    for base in (16, 32, 128, 256, 512):
-        emit(base, f"icon_{base}x{base}.png")
-        emit(base * 2, f"icon_{base}x{base}@2x.png")
-
-    subprocess.run(["iconutil", "-c", "icns", str(iconset),
-                    "-o", str(RESOURCES / "AppIcon.icns")], check=True)
+    # macOS icon plate retains the platform's outer transparent margin.
+    plate_size = 824
+    plate = full.resize((plate_size, plate_size), Image.Resampling.LANCZOS).convert('RGBA')
+    clip = Image.new('L', (plate_size * 4, plate_size * 4))
+    ImageDraw.Draw(clip).rounded_rectangle((0, 0, clip.width - 1, clip.height - 1), radius=plate_size * 0.22 * 4, fill=255)
+    plate.putalpha(clip.resize(plate.size, Image.Resampling.LANCZOS))
+    mac = Image.new('RGBA', (1024, 1024))
+    mac.alpha_composite(plate, (100, 100))
+    save(mac, 'Resources/AppIcon-preview.png')
+    save(mac, 'promo/public/icon.png')
+    iconset = RESOURCES / 'AppIcon.iconset'
+    iconset.mkdir(exist_ok=True)
+    for size in (16, 32, 128, 256, 512):
+        for scale in (1, 2):
+            suffix = '' if scale == 1 else '@2x'
+            mac.resize((size * scale, size * scale), Image.Resampling.LANCZOS).save(iconset / f'icon_{size}x{size}{suffix}.png')
+    subprocess.run(['iconutil', '-c', 'icns', str(iconset), '-o', str(RESOURCES / 'AppIcon.icns')], check=True)
     shutil.rmtree(iconset)
 
-
-def main() -> int:
-    if not Path(FONT_PATH).exists():
-        print(f"Font bulunamadı: {FONT_PATH}", file=sys.stderr)
-        return 1
-    RESOURCES.mkdir(exist_ok=True)
-
-    icon = build_app_icon()
-    icon.save(RESOURCES / "AppIcon-preview.png")
-    build_icns(icon, build_app_icon(glyph_scale=0.86))
-
-    print(f"Yazıldı: {RESOURCES/'AppIcon.icns'}, {RESOURCES/'AppIcon-preview.png'}")
-    return 0
+    # Adaptive launcher: transparent foreground with the mark inside safe bounds.
+    # Use the source mark's colors at the same geometry, avoiding recoloring.
+    crop = master.crop(ImageChops.subtract(master.getchannel('R'), master.getchannel('B')).point(lambda v: min(255, v * 8)).getbbox()).convert('RGBA')
+    crop.putalpha(mask)
+    crop.thumbnail((216, 216), Image.Resampling.LANCZOS)
+    foreground = Image.new('RGBA', (432, 432))
+    foreground.alpha_composite(crop, ((432 - crop.width) // 2, (432 - crop.height) // 2))
+    save(foreground, 'android/app/src/main/res/drawable-nodpi/kamus_launcher_foreground.png')
+    print('Updated macOS, iOS, Android, action extension, widget and promo assets from kamus.png.')
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+if __name__ == '__main__':
+    main()

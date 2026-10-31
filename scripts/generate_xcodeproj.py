@@ -5,6 +5,8 @@ Generates Kamus.xcodeproj for iOS App, Action Extension, and WidgetKit extension
 
 import os
 import hashlib
+import gzip
+import shutil
 
 def gen_id(name: str) -> str:
     # PBX 24-char hex ID
@@ -17,13 +19,22 @@ def main():
     os.makedirs(xcode_dir, exist_ok=True)
     pbx_path = os.path.join(xcode_dir, "project.pbxproj")
 
+    # Bundle the uncompressed database expected by DictionaryStore.
+    with gzip.open(os.path.join(proj_dir, "Resources/seeds.sqlite.gz"), "rb") as source:
+        with open(os.path.join(proj_dir, "Resources/seeds.sqlite"), "wb") as target:
+            shutil.copyfileobj(source, target)
+
     # Define File References
     # Shared sources
     shared_files = [
         ("Sources/Kamus/TDKAPIClient.swift", "TDKAPIClient.swift", "sourcecode.swift"),
         ("Sources/Kamus/DictionaryStore.swift", "DictionaryStore.swift", "sourcecode.swift"),
         ("Sources/Kamus/TurkishSpeechSpeaker.swift", "TurkishSpeechSpeaker.swift", "sourcecode.swift"),
-        ("Resources/seeds.sqlite.gz", "seeds.sqlite.gz", "archive.gzip"),
+        ("Resources/seeds.sqlite", "seeds.sqlite", "file"),
+    ]
+
+    shared_files += [
+        ("Resources/Brand.xcassets", "Brand.xcassets", "folder.assetcatalog"),
     ]
 
     # App sources
@@ -173,7 +184,7 @@ def main():
 
     app_bf_resources = [
         add_res_file(app_fids["iOS/Kamus/Assets.xcassets"], "Assets.xcassets"),
-        add_res_file(shared_fids["Resources/seeds.sqlite.gz"], "seeds.sqlite.gz"),
+        add_res_file(shared_fids["Resources/seeds.sqlite"], "seeds.sqlite"),
     ]
 
     # Build files for Action
@@ -200,6 +211,17 @@ def main():
         add_build_file(widget_fids["iOS/KamusWidgets/WordOfTheDayWidget.swift"], "WordOfTheDayWidget.swift"),
         add_build_file(widget_fids["iOS/KamusWidgets/QuickSearchWidget.swift"], "QuickSearchWidget.swift"),
     ]
+
+    widget_bf_resources = []
+    for resources in (app_bf_resources, action_bf_resources, widget_bf_resources):
+        for name in ("Brand.xcassets",):
+            # Each target needs its own PBXBuildFile, even for shared images.
+            fid = shared_fids["Resources/" + name]
+            # Stable identifiers make project regeneration deterministic.
+            target = "app" if resources is app_bf_resources else "action" if resources is action_bf_resources else "widget"
+            bf_id = gen_id("brand_" + target + "_" + name)
+            pbx_build_files.append(f'\t\t{bf_id} /* {name} in Resources */ = {{isa = PBXBuildFile; fileRef = {fid} /* {name} */; }};')
+            resources.append(bf_id)
 
     # Embed App Extensions in App
     pbx_build_files.append(f'\t\t{action_embed_build_file} /* KamusActionExtension.appex in Embed App Extensions */ = {{isa = PBXBuildFile; fileRef = {action_prod_id} /* KamusActionExtension.appex */; settings = {{ATTRIBUTES = (RemoveHeadersOnCopy, ); }}; }};')
@@ -300,7 +322,8 @@ def main():
 				{shared_fids["Sources/Kamus/TDKAPIClient.swift"]} /* TDKAPIClient.swift */,
 				{shared_fids["Sources/Kamus/DictionaryStore.swift"]} /* DictionaryStore.swift */,
 				{shared_fids["Sources/Kamus/TurkishSpeechSpeaker.swift"]} /* TurkishSpeechSpeaker.swift */,
-				{shared_fids["Resources/seeds.sqlite.gz"]} /* seeds.sqlite.gz */,
+				{shared_fids["Resources/seeds.sqlite"]} /* seeds.sqlite */,
+				{shared_fids["Resources/Brand.xcassets"]} /* Brand.xcassets */,
 			);
 			name = Shared;
 			sourceTree = "<group>";
@@ -472,6 +495,7 @@ def main():
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+{chr(10).join([f"{chr(9)}{chr(9)}{chr(9)}{fid}," for fid in widget_bf_resources])}
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		}};

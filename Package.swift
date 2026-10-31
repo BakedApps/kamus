@@ -12,7 +12,8 @@ let package = Package(
             name: "Kamus",
             dependencies: [],
             path: "Sources",
-            exclude: ["Kamus/Info.plist", "Kamus/Kamus.entitlements"]
+            exclude: ["Kamus/Info.plist", "Kamus/Kamus.entitlements"],
+            resources: [.process("Kamus/Resources")]
         )
     ]
 )

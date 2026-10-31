@@ -34,6 +34,11 @@ mkdir -p "${RESOURCES_DIR}"
 # Copy executable
 cp ".build/release/${APP_NAME}" "${MACOS_DIR}/"
 
+# SwiftPM resources are resolved next to the executable in a packaged app.
+for resource_bundle in .build/release/*.bundle; do
+    [ -d "$resource_bundle" ] && cp -R "$resource_bundle" "${RESOURCES_DIR}/"
+done
+
 # Copy Info.plist
 cp "Sources/${APP_NAME}/Info.plist" "${CONTENTS_DIR}/"
 

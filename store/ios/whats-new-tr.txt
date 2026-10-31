@@ -1,0 +1,1 @@
+Kâmus’un ilk sürümü: Türkçe kelime arama, çevrimdışı sözlük, sesli okuma, favoriler, arama geçmişi, Günün Kelimesi, widget’lar ve paylaşım eklentisi.

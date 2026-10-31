@@ -1,0 +1,119 @@
+project:
+  name: Kâmus
+  device: iPad Pro 13 - M4 - Silver - Portrait
+  output_dir: /Users/akif/Developer/Projects/ptech/kamus/screenshots/framed/tr/ipad
+  output_size: iPadPro13
+defaults:
+  background:
+    type: solid
+    colors:
+    - '#F5EEE6'
+screenshots:
+  01-search:
+    content:
+    - type: text
+      content: 'Her kelime,
+
+        yeni bir keşif.'
+      position:
+      - 50%
+      - 9%
+      size: 100
+      weight: bold
+      color: '#382F27'
+      max_width: 1800
+    - type: text
+      content: Anlamı, kökeni ve kullanım örnekleri.
+      position:
+      - 50%
+      - 20%
+      size: 46
+      color: '#756454'
+    - type: image
+      asset: /Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/ipad/01-search.png
+      frame: true
+      position:
+      - 50%
+      - 64%
+      scale: 0.62
+  02-daily:
+    content:
+    - type: text
+      content: 'Her güne
+
+        bir kelime.'
+      position:
+      - 50%
+      - 9%
+      size: 100
+      weight: bold
+      color: '#382F27'
+      max_width: 1800
+    - type: text
+      content: Günün Kelimesi ile Türkçeyi keşfet.
+      position:
+      - 50%
+      - 20%
+      size: 46
+      color: '#756454'
+    - type: image
+      asset: /Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/ipad/02-daily.png
+      frame: true
+      position:
+      - 50%
+      - 64%
+      scale: 0.62
+  03-favorites:
+    content:
+    - type: text
+      content: 'Sevdiğin kelimeler
+
+        bir arada.'
+      position:
+      - 50%
+      - 9%
+      size: 100
+      weight: bold
+      color: '#382F27'
+      max_width: 1800
+    - type: text
+      content: Favorilerinle kendi koleksiyonunu oluştur.
+      position:
+      - 50%
+      - 20%
+      size: 46
+      color: '#756454'
+    - type: image
+      asset: /Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/ipad/03-favorites.png
+      frame: true
+      position:
+      - 50%
+      - 64%
+      scale: 0.62
+  04-history:
+    content:
+    - type: text
+      content: 'Bir kez ara.
+
+        Yeniden bul.'
+      position:
+      - 50%
+      - 9%
+      size: 100
+      weight: bold
+      color: '#382F27'
+      max_width: 1800
+    - type: text
+      content: Baktığın kelimelere geçmişinden ulaş.
+      position:
+      - 50%
+      - 20%
+      size: 46
+      color: '#756454'
+    - type: image
+      asset: /Users/akif/Developer/Projects/ptech/kamus/screenshots/raw/tr/ipad/04-history.png
+      frame: true
+      position:
+      - 50%
+      - 64%
+      scale: 0.62

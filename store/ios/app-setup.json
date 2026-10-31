@@ -1,0 +1,18 @@
+{
+  "name": "Kâmus: Türkçe Sözlük",
+  "bundleId": "cloud.bakedapps.kamus",
+  "sku": "kamus-ios",
+  "primaryLocale": "tr",
+  "platform": "IOS",
+  "version": "1.0.0",
+  "copyright": "2026 Mehmet Akif Petek",
+  "suggestedPrimaryCategory": "REFERENCE",
+  "suggestedSecondaryCategory": "EDUCATION",
+  "supportUrl": "https://bakedapps.cloud/kamus/support/tr/",
+  "privacyPolicyUrl": "https://bakedapps.cloud/kamus/privacy/tr/",
+  "accountRequired": false,
+  "reviewNotes": "Kâmus is an independent Turkish dictionary app. No login is required. The bundled dictionary works offline; online searches send the requested word to sozluk.gov.tr to refresh definitions. Search for merak, ilham or keşif. Tap the speaker for system text-to-speech and the star for favorites. Word of the Day uses the local dictionary. The iOS share action is named Kâmus’ta Ara. Home Screen and Lock Screen widgets are included. This is not an official Turkish Language Association (TDK) app.",
+  "remoteAppId": "6827496588",
+  "versionId": "0a5fb608-cdfd-4a2e-a02a-64e3853342c8",
+  "versionLocalizationId": "dde4ba64-adcc-4224-bcc6-3815b5987bda"
+}

@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "app": {
+    "bundle_id": "cloud.bakedapps.kamus",
+    "project": "Kamus.xcodeproj",
+    "scheme": "Kamus",
+    "simulator_udid": "FE49C301-9A58-4B0D-9DE7-24734EEFF163"
+  },
+  "paths": {
+    "plan": ".asc/screenshots.json",
+    "raw_dir": "./screenshots/raw",
+    "framed_dir": "./screenshots/upload"
+  },
+  "pipeline": {
+    "frame_enabled": true,
+    "upload_enabled": false
+  },
+  "upload": {
+    "version_localization_id": "dde4ba64-adcc-4224-bcc6-3815b5987bda",
+    "device_type": "IPHONE_65",
+    "source_dir": "./screenshots/upload/tr/iphone"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "app": {"bundle_id": "cloud.bakedapps.kamus", "udid": "booted", "output_dir": "./screenshots/raw/tr/iphone"},
+  "steps": [{"action":"launch"},{"action":"wait","duration_ms":1500},{"action":"screenshot","name":"home"}]
+}

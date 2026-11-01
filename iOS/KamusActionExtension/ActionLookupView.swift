@@ -71,7 +71,7 @@ struct ActionLookupView: View {
                 } else if let error = errorMessage {
                     VStack(spacing: 14) {
                         Image(systemName: "text.magnifyingglass")
-                            .font(.system(size: 40))
+                            .font(.largeTitle)
                             .foregroundColor(.secondary)
                         Text(error)
                             .font(.subheadline)
@@ -138,7 +138,7 @@ struct ActionLookupView: View {
                                             }) {
                                                 HStack(spacing: 4) {
                                                     Image(systemName: "magnifyingglass")
-                                                        .font(.system(size: 9))
+                                                        .font(.caption2)
                                                     Text(compound)
                                                         .font(.caption.weight(.medium))
                                                 }
@@ -179,7 +179,7 @@ struct ActionLookupView: View {
                 } else {
                     VStack(spacing: 12) {
                         Image(systemName: "questionmark.circle")
-                            .font(.system(size: 40))
+                            .font(.largeTitle)
                             .foregroundColor(.secondary)
                         Text("Aranacak bir kelime seçilmedi.")
                             .font(.subheadline)
@@ -204,32 +204,28 @@ struct ActionLookupView: View {
                     }
                     .accessibilityElement(children: .combine)
                 }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    HStack(spacing: 8) {
-                        if !wordHistory.isEmpty {
-                            Button(action: goBack) {
-                                HStack(spacing: 3) {
-                                    Image(systemName: "chevron.left")
-                                        .font(.caption.weight(.semibold))
-                                    Text("Geri")
-                                }
-                            }
+                // Her kontrol ayrı ToolbarItem: HStack'le birleştirilen özel
+                // görünümler iPhone Duo'da dikey bara taşınmıyor.
+                if !wordHistory.isEmpty {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: goBack) {
+                            Label("Geri", systemImage: "chevron.left")
                         }
+                    }
+                }
 
-                        if !wordText.isEmpty {
-                            Button("Uygulamada Aç") {
-                                onOpenInApp(wordText)
-                            }
-                            .font(.footnote)
+                if !wordText.isEmpty {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(action: { onOpenInApp(wordText) }) {
+                            Label("Uygulamada Aç", systemImage: "arrow.up.forward.app")
                         }
                     }
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Bitti") {
-                        onClose()
+                    Button(action: onClose) {
+                        Label("Bitti", systemImage: "checkmark")
                     }
-                    .font(.headline)
                 }
             }
             .task {
@@ -318,7 +314,7 @@ struct ActionMeaningRow: View {
             Text("\(index).")
                 .font(.subheadline.weight(.semibold))
                 .foregroundColor(.accentColor)
-                .frame(width: 20, alignment: .leading)
+                .frame(minWidth: 20, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 6) {
                 if let props = meaning.ozelliklerListe, !props.isEmpty {
@@ -348,7 +344,7 @@ struct ActionMeaningRow: View {
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: isWordExplorerOpen ? "chevron.up.circle.fill" : "text.magnifyingglass")
-                                .font(.system(size: 10))
+                                .font(.caption2)
                             Text(isWordExplorerOpen ? "Kelimeleri Gizle" : "Anlamdaki Kelimeleri Ara")
                                 .font(.caption2.weight(.medium))
                         }

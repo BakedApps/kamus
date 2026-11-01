@@ -70,3 +70,18 @@ Kullanıcı onayıyla güncel iPhone v3 ve iPad v4 görselleri yüklendi. Dört 
 Yeni â simgesini içeren 1.0.0 (1) derlemesi arşivlendi, App Store dağıtımı için dışa aktarıldı ve yüklendi. Apple işleme durumu VALID. Derleme `fa3a7150-2e8b-4720-8f6e-d4ec3d9697a6` sürüm kaydına bağlandı. App Store Connect Included Assets / App Icon önizlemesinde yeni logo doğrulandı.
 
 Makbuzlar ve ekran kanıtları `store/ios/upload-20261028/` altında. İncelemeye gönderilmedi. Arayüzde export compliance hâlâ Missing Compliance; App Privacy daha önceki gibi tamamlanmadı.
+
+
+### TestFlight 1.0.1 — 1 Kasım 2026
+
+iPhone Duo düzeni, eşitlenmiş kenar boşlukları ve gri zemin çalışmalarını içeren 1.0.1 (build 2) arşivlendi, App Store dağıtımı için dışa aktarıldı ve yüklendi.
+
+- Derleme `bf2df8b7-c2a7-4f33-931e-93d230e30d1d`, işleme durumu VALID, `minOsVersion 17.0`, IPA 13.692.607 bayt.
+- `ITSAppUsesNonExemptEncryption = false` üç Info.plist'e eklendi; derlemede `usesNonExemptEncryption: false`. Export compliance kaynaklı "Missing Compliance" artık oluşmuyor.
+- TestFlight: `internalBuildState READY_FOR_BETA_TESTING`, `autoNotifyEnabled true`. Yalnızca dâhili testediciler; dış beta inceleme başvurusu yapılmadı (`no beta app review submission found`). Uygulamanın hiçbir TestFlight grubu yok (API `betaGroups` toplamı 0), yani harici dağıtım hiç kurulmadı.
+- What to Test notu `tr` yerelleştirmesi olarak derlemeye yazıldı (`betaBuildLocalizations` 87f38eaa-b790-4c94-80d9-35b6992ea6d4).
+- 1.0.0 hâlâ WAITING_FOR_REVIEW (başvuru `a15a75e9-83d2-4b4b-a72f-150a50edc5c6`, 31 Ekim 2026 17:39Z). Apple aynı platformda ikinci bir yayınlanmamış sürüm kaydına izin vermediği için **1.0.1 App Store sürüm kaydı oluşturulamadı**; `asc versions create` bu durumda reddediliyor.
+- Türkçe 1.0.1 sürüm notları `metadata/version/1.0.1/tr.json` içinde hazır ve `asc metadata validate --dir metadata --check-urls` doğrulamasından geçti (3 dosya, 0 hata/uyarı). 1.0.0 incelemesi sonuçlandığında sırayla çalıştırılır:
+  1. `asc versions create --app 6827496588 --version 1.0.1 --platform IOS --copy-metadata-from 1.0.0 --if-exists skip`
+  2. `asc metadata apply --app 6827496588 --version 1.0.1 --dir ./metadata` (önce `--dry-run`)
+  3. build `bf2df8b7-c2a7-4f33-931e-93d230e30d1d` sürüm kaydına bağlanır; incelemeye gönderilmez.

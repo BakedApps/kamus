@@ -15,6 +15,23 @@ final class MobileSearchViewModel: ObservableObject {
     @Published var todayWord: (word: String, response: SearchResponse)? = nil
     @Published var clipboardWordSuggestion: String? = nil
     @Published var isCurrentWordFavorite: Bool = false
+    @Published var selectedResultID: String? = nil {
+        // Favori durumu, seçili maddenki kelimeye bakmalı; List selection
+        // @Published'i doğrudan yazdığı için iş buradan yürür.
+        didSet {
+            guard selectedResultID != oldValue else { return }
+            Task { await refreshHistoryAndFavorites() }
+        }
+    }
+
+    var selectedResult: WordResult? {
+        guard let selectedResultID else { return nil }
+        return results.first { $0.madde_id == selectedResultID }
+    }
+
+    func isFavorite(word: String) -> Bool {
+        favorites.contains { $0.word == word }
+    }
 
     private var searchTask: Task<Void, Never>?
     private var suggestTask: Task<Void, Never>?
@@ -38,7 +55,7 @@ final class MobileSearchViewModel: ObservableObject {
         let favs = await DictionaryStore.shared.favoriteWords()
         self.recentSearches = recents
         self.favorites = favs
-        if let currentWord = results.first?.madde {
+        if let currentWord = selectedResult?.madde ?? results.first?.madde {
             let isFav = await DictionaryStore.shared.isFavorite(word: currentWord)
             self.isCurrentWordFavorite = isFav
         }
@@ -111,6 +128,7 @@ final class MobileSearchViewModel: ObservableObject {
             if let cachedData = await DictionaryStore.shared.cachedResponse(for: trimmed) {
                 if let decoded = try? JSONDecoder().decode([WordResult].self, from: cachedData), !decoded.isEmpty {
                     self.results = decoded
+                    self.selectedResultID = decoded.first?.madde_id
                     self.isLoading = false
                     await DictionaryStore.shared.touch(word: trimmed)
                     await self.refreshHistoryAndFavorites()
@@ -122,6 +140,7 @@ final class MobileSearchViewModel: ObservableObject {
                 let response = try await TDKAPIClient.searchWord(trimmed)
                 if Task.isCancelled { return }
                 self.results = response.results
+                self.selectedResultID = response.results.first?.madde_id
                 self.isLoading = false
 
                 if response.results.isEmpty {
@@ -146,6 +165,7 @@ final class MobileSearchViewModel: ObservableObject {
         searchText = ""
         results = []
         suggestions = []
+        selectedResultID = nil
         errorMessage = nil
         isLoading = false
         Task {

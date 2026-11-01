@@ -8,6 +8,8 @@ struct KamusMobileApp: App {
     var body: some Scene {
         WindowGroup {
             MainTabView()
+                // Duo'nun dikey bar payası gibi içerik dışı şeritler beyaz kalmasın.
+                .background(Color(.systemGroupedBackground).ignoresSafeArea())
                 .environmentObject(searchVM)
                 .onOpenURL { url in
                     handleDeepLink(url: url)

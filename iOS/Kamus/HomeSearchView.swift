@@ -2,129 +2,248 @@ import SwiftUI
 
 struct HomeSearchView: View {
     @EnvironmentObject var searchVM: MobileSearchViewModel
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @FocusState private var isInputFocused: Bool
+
+    // iPhone Duo'nun iç ekranı (ve iPad) regular genişlik verir; dış ekran compact.
+    private var showsDetailPane: Bool { horizontalSizeClass == .regular }
+
+    var body: some View {
+        if showsDetailPane {
+            NavigationSplitView {
+                sidebarColumn
+                    .kamusEdgePadding()
+                    // Zemin, kenar payasının DIŞINDA boyanmalı; yoksa paya boş kalan
+                    // şerit sidebar materyalinin beyazıyla kalıyor.
+                    .background(Color(.systemGroupedBackground))
+                    .kamusSidebarWidth()
+                    .toolbar(.hidden, for: .navigationBar)
+            } detail: {
+                SearchDetailPane()
+            }
+            .background(Color(.systemGroupedBackground))
+        } else {
+            // Compact: arama sonucu aynı kolonda, eskisi gibi inline açılır.
+            NavigationStack {
+                ScrollView {
+                    VStack(spacing: 16) {
+                        SearchHeader(isInputFocused: $isInputFocused)
+                        if searchVM.searchText.isEmpty && searchVM.results.isEmpty {
+                            HomeDefaultFeed()
+                        } else {
+                            SearchStateView()
+                            resultCards
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                .kamusEdgePadding()
+                // Diğer sekmelerle aynı grouped zemin; yoksa NavigationStack beyaz kalıyor.
+                .background(Color(.systemGroupedBackground))
+            }
+        }
+    }
+
+    private var sidebarColumn: some View {
+        VStack(spacing: 0) {
+            SearchHeader(isInputFocused: $isInputFocused)
+                .padding(.top, 8)
+            if searchVM.results.isEmpty {
+                defaultFeed
+            } else {
+                WordResultSelectionList()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    private var resultCards: some View {
+        VStack(spacing: 16) {
+            ForEach(searchVM.results, id: \.madde_id) { result in
+                WordDetailCardView(
+                    wordResult: result,
+                    isFavorite: searchVM.isFavorite(word: result.madde),
+                    onToggleFavorite: { searchVM.toggleFavorite(word: result.madde) },
+                    onSelectWord: { searchVM.search(word: $0) }
+                )
+            }
+        }
+    }
+
+    private var defaultFeed: some View {
+        VStack(alignment: .leading) {
+            SearchStateView()
+            HomeDefaultFeed()
+                .padding(.top, 8)
+        }
+    }
+}
+
+// MARK: - Arama Alanı (her iki düzen de bunu kullanır)
+
+struct SearchHeader: View {
+    @EnvironmentObject var searchVM: MobileSearchViewModel
+    var isInputFocused: FocusState<Bool>.Binding
     @ScaledMetric(relativeTo: .largeTitle) private var logoSize = 40
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    HStack(spacing: 12) {
-                        Image("KamusLogo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: logoSize, height: logoSize)
-                            .clipShape(RoundedRectangle(cornerRadius: logoSize * 0.22, style: .continuous))
-                            .accessibilityHidden(true)
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                Image("KamusLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: logoSize, height: logoSize)
+                    .clipShape(RoundedRectangle(cornerRadius: logoSize * 0.22, style: .continuous))
+                    .accessibilityHidden(true)
 
-                        Text("Kâmus")
-                            .font(.largeTitle.bold())
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.75)
-                            .accessibilityAddTraits(.isHeader)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-
-                    // Pano Öneri Kartı
-                    if let clipWord = searchVM.clipboardWordSuggestion {
-                        ClipboardBanner(
-                            word: clipWord,
-                            onSearch: { searchVM.useClipboardSuggestion() },
-                            onDismiss: { searchVM.dismissClipboardSuggestion() }
-                        )
-                        .padding(.horizontal)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-
-                    // Arama Kutusu ve Otomatik Tamamlama
-                    VStack(spacing: 0) {
-                        SearchBarField(
-                            text: $searchVM.searchText,
-                            isFocused: $isInputFocused,
-                            onCommit: {
-                                searchVM.search(word: searchVM.searchText)
-                            },
-                            onClear: {
-                                searchVM.clearSearch()
-                            },
-                            onChange: { newText in
-                                if newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                    searchVM.results = []
-                                    searchVM.suggestions = []
-                                } else if searchVM.results.isEmpty {
-                                    searchVM.updateSuggestions(for: newText)
-                                }
-                            }
-                        )
-                        .padding(.horizontal)
-
-                        // Canlı Öneriler Listesi
-                        if !searchVM.suggestions.isEmpty && searchVM.results.isEmpty {
-                            SuggestionsDropdown(
-                                suggestions: searchVM.suggestions,
-                                query: searchVM.searchText,
-                                onSelect: { selected in
-                                    isInputFocused = false
-                                    searchVM.search(word: selected)
-                                }
-                            )
-                            .padding(.horizontal)
-                            .padding(.top, 4)
-                        }
-                    }
-
-                    // İçerik: Boşken Günün Kelimesi & Son Aramalar | Doluyken Arama Sonuçları
-                    if searchVM.searchText.isEmpty && searchVM.results.isEmpty {
-                        HomeDefaultFeed()
-                            .padding(.horizontal)
-                    } else if searchVM.isLoading {
-                        VStack(spacing: 12) {
-                            ProgressView()
-                                .scaleEffect(1.2)
-                            Text("Kelime aranıyor...")
-                                .font(.footnote)
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 40)
-                    } else if let errorMsg = searchVM.errorMessage {
-                        VStack(spacing: 14) {
-                            Image(systemName: "text.magnifyingglass")
-                                .font(.system(size: 44))
-                                .foregroundColor(.secondary)
-                            Text(errorMsg)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 32)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 40)
-                    } else if !searchVM.results.isEmpty {
-                        VStack(spacing: 16) {
-                            ForEach(searchVM.results, id: \.madde_id) { result in
-                                WordDetailCardView(
-                                    wordResult: result,
-                                    isFavorite: searchVM.isCurrentWordFavorite,
-                                    onToggleFavorite: {
-                                        searchVM.toggleFavorite(word: result.madde)
-                                    },
-                                    onSelectWord: { selected in
-                                        searchVM.search(word: selected)
-                                    }
-                                )
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-                .padding(.vertical, 8)
+                Text("Kâmus")
+                    .font(.largeTitle.bold())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .accessibilityAddTraits(.isHeader)
             }
-            .toolbar(.hidden, for: .navigationBar)
-            .background(Color(.systemGroupedBackground))
-            .animation(.easeInOut(duration: 0.25), value: searchVM.clipboardWordSuggestion)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let clipWord = searchVM.clipboardWordSuggestion {
+                ClipboardBanner(
+                    word: clipWord,
+                    onSearch: { searchVM.useClipboardSuggestion() },
+                    onDismiss: { searchVM.dismissClipboardSuggestion() }
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
+            VStack(spacing: 0) {
+                SearchBarField(
+                    text: $searchVM.searchText,
+                    isFocused: isInputFocused,
+                    onCommit: { searchVM.search(word: searchVM.searchText) },
+                    onClear: { searchVM.clearSearch() },
+                    onChange: { newText in
+                        if newText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            searchVM.results = []
+                            searchVM.suggestions = []
+                        } else if searchVM.results.isEmpty {
+                            searchVM.updateSuggestions(for: newText)
+                        }
+                    }
+                )
+
+                if !searchVM.suggestions.isEmpty && searchVM.results.isEmpty {
+                    SuggestionsDropdown(
+                        suggestions: searchVM.suggestions,
+                        query: searchVM.searchText,
+                        onSelect: { selected in
+                            isInputFocused.wrappedValue = false
+                            searchVM.search(word: selected)
+                        }
+                    )
+                    .padding(.top, 4)
+                }
+            }
         }
+        .animation(.easeInOut(duration: 0.25), value: searchVM.clipboardWordSuggestion)
+    }
+}
+
+// MARK: - Yükleniyor / Hata durumu
+
+struct SearchStateView: View {
+    @EnvironmentObject var searchVM: MobileSearchViewModel
+
+    var body: some View {
+        if searchVM.isLoading {
+            VStack(spacing: 12) {
+                ProgressView()
+                    .scaleEffect(1.2)
+                Text("Kelime aranıyor...")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 40)
+        } else if let errorMsg = searchVM.errorMessage {
+            VStack(spacing: 14) {
+                Image(systemName: "text.magnifyingglass")
+                    .font(.largeTitle)
+                    .foregroundColor(.secondary)
+                Text(errorMsg)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, 40)
+        }
+    }
+}
+
+// MARK: - Regular genişlik: seçilebilir sonuç listesi + detay kolonu
+
+struct WordResultSelectionList: View {
+    @EnvironmentObject var searchVM: MobileSearchViewModel
+
+    var body: some View {
+        List(selection: $searchVM.selectedResultID) {
+            ForEach(searchVM.results, id: \.madde_id) { result in
+                WordResultRow(
+                    wordResult: result,
+                    isFavorite: searchVM.isFavorite(word: result.madde)
+                )
+                .tag(result.madde_id)
+            }
+        }
+        .listStyle(.sidebar)
+        .scrollContentBackground(.hidden)
+    }
+}
+
+struct WordResultRow: View {
+    let wordResult: WordResult
+    let isFavorite: Bool
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(wordResult.madde)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                if !wordResult.lisan.isEmpty {
+                    Text(wordResult.lisan)
+                        .font(.caption)
+                        .italic()
+                        .foregroundColor(.secondary)
+                }
+
+                if let meaning = wordResult.anlamlarListe.first {
+                    Text(meaning.anlam)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            if isFavorite {
+                Image(systemName: "star.fill")
+                    .font(.caption)
+                    .foregroundColor(.yellow)
+                    .accessibilityLabel("Favori")
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+struct SearchDetailPane: View {
+    var body: some View {
+        SelectedWordDetailPane(
+            emptyTitle: "Kelime seçin",
+            emptyDescription: "Sol taraftan bir sonuç seçtiğinizde madde burada açılır."
+        )
     }
 }
 
@@ -261,6 +380,7 @@ struct ClipboardBanner: View {
 
 struct HomeDefaultFeed: View {
     @EnvironmentObject var searchVM: MobileSearchViewModel
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -270,7 +390,12 @@ struct HomeDefaultFeed: View {
                     word: today.word,
                     response: today.response,
                     onTap: {
-                        searchVM.selectedTab = .wordOfDay
+                        // Açık ekranda madde sağ pane'de açılır; sekmeyi bırakmak gerekmez.
+                        if horizontalSizeClass == .regular {
+                            searchVM.search(word: today.word)
+                        } else {
+                            searchVM.selectedTab = .wordOfDay
+                        }
                     }
                 )
             }

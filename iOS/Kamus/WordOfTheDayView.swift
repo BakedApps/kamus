@@ -2,64 +2,145 @@ import SwiftUI
 
 struct WordOfTheDayView: View {
     @EnvironmentObject var searchVM: MobileSearchViewModel
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var date: Date = Date()
     @State private var todayData: (word: String, response: SearchResponse)? = nil
     @State private var isLoading = false
     @State private var isFavorite = false
 
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    if let today = todayData, let result = today.response.results.first {
-                        VStack(spacing: 16) {
-                            // Date header
-                            HStack {
-                                Image(systemName: "calendar")
-                                    .foregroundColor(.accentColor)
-                                Text(dateFormatted(date))
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 4)
+    private var result: WordResult? { todayData?.response.results.first }
 
-                            WordDetailCardView(
-                                wordResult: result,
-                                isFavorite: isFavorite,
-                                onToggleFavorite: {
-                                    searchVM.toggleFavorite(word: result.madde)
-                                    isFavorite.toggle()
-                                },
-                                onSelectWord: { selected in
-                                    searchVM.selectedTab = .search
-                                    searchVM.search(word: selected)
-                                }
-                            )
-                        }
-                        .padding(.horizontal)
-                    } else if isLoading {
-                        ProgressView("Günün kelimesi yükleniyor...")
-                            .padding(.top, 60)
-                    } else {
-                        VStack(spacing: 12) {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 40))
-                                .foregroundColor(.secondary)
-                            Text("Günün kelimesi hazırlanıyor...")
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.top, 60)
-                    }
-                }
-                .padding(.vertical)
+    // Duo'nun iç ekranı (ve iPad) regular genişlik verir; dış ekran compact.
+    private var showsDetailPane: Bool { horizontalSizeClass == .regular }
+
+    var body: some View {
+        if showsDetailPane {
+            NavigationSplitView {
+                identityColumn
+                    .kamusSidebarWidth()
+                    .navigationTitle("Günün Kelimesi")
+            } detail: {
+                meaningsColumn
             }
-            .navigationTitle("Günün Kelimesi")
             .background(Color(.systemGroupedBackground))
-            .task {
-                loadWord()
+            .task { loadWord() }
+        } else {
+            NavigationStack {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        if let result {
+                            VStack(spacing: 16) {
+                                dateHeader
+                                WordDetailCardView(
+                                    wordResult: result,
+                                    isFavorite: isFavorite,
+                                    onToggleFavorite: toggleFavorite,
+                                    onSelectWord: openInSearch
+                                )
+                            }
+                        } else {
+                            placeholder
+                        }
+                    }
+                    .kamusEdgePadding()
+                    .padding(.vertical)
+                }
+                .navigationTitle("Günün Kelimesi")
+                .background(Color(.systemGroupedBackground))
+                .task { loadWord() }
             }
         }
+    }
+
+    // Sol kolon: kelimenin künyesi. Anlamlar sağ kolonda açılır.
+    private var identityColumn: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                if let result {
+                    dateHeader
+                    VStack(alignment: .leading, spacing: 12) {
+                        WordIdentityView(
+                            wordResult: result,
+                            isFavorite: isFavorite,
+                            onToggleFavorite: toggleFavorite
+                        )
+                        Text("Anlamları sağ tarafta")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .kamusCard()
+                } else {
+                    placeholder
+                }
+            }
+            .padding(.vertical)
+            .kamusEdgePadding()
+            .frame(maxWidth: .infinity, alignment: .top)
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private var meaningsColumn: some View {
+        Group {
+            if let result {
+                GeometryReader { proxy in
+                    ScrollView {
+                        WordMeaningsView(wordResult: result, onSelectWord: openInSearch)
+                            .kamusCard()
+                            .frame(width: min(proxy.size.width - 32, 700))
+                            .frame(width: proxy.size.width)
+                            .padding(.vertical, 16)
+                    }
+                }
+                .background(Color(.systemGroupedBackground))
+            } else {
+                ContentUnavailableView(
+                    "Günün kelimesi",
+                    systemImage: "sparkles",
+                    description: Text("Kelime yüklendiğinde anlamları burada görünür.")
+                )
+            }
+        }
+        // Kelime yokken detay kolonu beyaz kalmasın.
+        .background(Color(.systemGroupedBackground))
+    }
+
+    private var dateHeader: some View {
+        HStack {
+            Image(systemName: "calendar")
+                .foregroundColor(.accentColor)
+            Text(dateFormatted(date))
+                .font(.subheadline.weight(.medium))
+                .foregroundColor(.secondary)
+            Spacer()
+        }
+    }
+
+    @ViewBuilder private var placeholder: some View {
+        if isLoading {
+            ProgressView("Günün kelimesi yükleniyor...")
+                .padding(.top, 60)
+        } else {
+            VStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.largeTitle)
+                    .foregroundColor(.secondary)
+                Text("Günün kelimesi hazırlanıyor...")
+                    .foregroundColor(.secondary)
+            }
+            .padding(.top, 60)
+        }
+    }
+
+    private func toggleFavorite() {
+        guard let result else { return }
+        searchVM.toggleFavorite(word: result.madde)
+        isFavorite.toggle()
+    }
+
+    private func openInSearch(_ word: String) {
+        searchVM.selectedTab = .search
+        searchVM.search(word: word)
     }
 
     private func loadWord() {

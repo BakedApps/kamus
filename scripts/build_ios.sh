@@ -7,7 +7,7 @@ echo "📱 Kâmus iOS Derleniyor..."
 python3 scripts/generate_xcodeproj.py
 
 # Simülatör için derle
-SIM_NAME="iPhone 17"
+SIM_NAME="${IOS_SIM_NAME:-iPhone 17}"
 echo "🔨 Hedef simülatör: ${SIM_NAME}"
 
 xcodebuild -project Kamus.xcodeproj \
